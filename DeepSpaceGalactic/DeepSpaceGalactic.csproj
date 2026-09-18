@@ -130,6 +130,10 @@
     </AppxManifest>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Assets\SpaceShips\EnemyShip1.png" />
+    <Content Include="Assets\SpaceShips\EnemyShip2.png" />
+    <Content Include="Assets\SpaceShips\PlayerShip1.png" />
+    <Content Include="Assets\SpaceShips\PlayerShip2.png" />
     <Content Include="Properties\Default.rd.xml" />
     <Content Include="Assets\LockScreenLogo.scale-200.png" />
     <Content Include="Assets\SplashScreen.scale-200.png" />
@@ -153,6 +157,12 @@
     <PackageReference Include="Microsoft.NETCore.UniversalWindowsPlatform">
       <Version>6.2.14</Version>
     </PackageReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\DSG_Library\DSG_Library.csproj">
+      <Project>{322c4c17-423b-4330-8389-0b8ff2e19a37}</Project>
+      <Name>DSG_Library</Name>
+    </ProjectReference>
   </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
     <VisualStudioVersion>14.0</VisualStudioVersion>

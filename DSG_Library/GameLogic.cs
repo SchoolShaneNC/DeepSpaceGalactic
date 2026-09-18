@@ -17,7 +17,7 @@ namespace DSG_Library
 
             Image img = new Image
             {
-                Source = new BitmapImage(new Uri($"ms-appx:///Assets/{imgSrc}")),
+                Source = new BitmapImage(new Uri($"ms-appx:///Assets/SpaceShips/{imgSrc}")),
                 Width = size,
                 Height = size,
                 Name = imageName,
