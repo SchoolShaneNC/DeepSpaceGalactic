@@ -22,28 +22,36 @@ namespace DSG_Library
             objectMargins = img.Margin;
         }
 
+        public bool Move(double horizontalDistance, double verticalDistance)
+        {
+            if (horizontalDistance == 0 && verticalDistance == 0)
+            {
+                return false;
+            }
+
+            objectMargins.Left += horizontalDistance;
+            objectMargins.Top += verticalDistance;
+            onScreen.Margin = objectMargins;
+            return true;
+        }
+
         public bool Move(Windows.System.VirtualKey direction)   //calculate a new location for the piece, based on a key press
         {
             switch (direction)
             {
                 case Windows.System.VirtualKey.Up:
-                    objectMargins.Top -= 10;
-                    break;
+                    return Move(0, -10);
                 case Windows.System.VirtualKey.Down:
-                    objectMargins.Top += 10;
-                    break;
+                    return Move(0, 10);
                 case Windows.System.VirtualKey.Left:
-                    objectMargins.Left -= 10;
-                    break;
+                    return Move(-10, 0);
                 case Windows.System.VirtualKey.Right:
-                    objectMargins.Left += 10;
-                    break;
+                    return Move(10, 0);
                 default:
                     return false;
-            }
-            onScreen.Margin = objectMargins;            //assign the new position to the on-screen image
-            return true;
         }
+    }
+
     }
     
 
