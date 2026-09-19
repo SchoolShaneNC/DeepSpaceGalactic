@@ -30,8 +30,15 @@ namespace DSG_Library
         }
         public static bool IsCollision(GamePiece piece1, GamePiece piece2)
         {
-            //Note: this looks for identical top/left locations of the two objects. To be more precise, you can write a better collision detection method!
-            return (piece1.Position == piece2.Position);
+            double piece1Left = piece1.Position.Left;
+            double piece1Top = piece1.Position.Top;
+            double piece2Left = piece2.Position.Left;
+            double piece2Top = piece2.Position.Top;
+
+            return piece1Left < piece2Left + piece2.Img.Width
+                && piece1Left + piece1.Img.Width > piece2Left
+                && piece1Top < piece2Top + piece2.Img.Height
+                && piece1Top + piece1.Img.Height > piece2Top;
         }
 
     }
