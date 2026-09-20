@@ -130,6 +130,8 @@
     </AppxManifest>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Assets\LazerBeams\BlueLazerBeam.png" />
+    <Content Include="Assets\LazerBeams\RedLazerBeam.png" />
     <Content Include="Assets\SpaceShips\EnemyShip1.png" />
     <Content Include="Assets\SpaceShips\EnemyShip2.png" />
     <Content Include="Assets\SpaceShips\PlayerShip1.png" />

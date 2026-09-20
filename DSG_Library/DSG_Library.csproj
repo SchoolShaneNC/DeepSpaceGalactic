@@ -122,6 +122,7 @@
   <ItemGroup>
     <Compile Include="Astriod.cs" />
     <Compile Include="Enemy.cs" />
+    <Compile Include="EnemyMovementState.cs" />
     <Compile Include="GameLogic.cs" />
     <Compile Include="GamePiece.cs" />
     <Compile Include="LargeEnemy.cs" />

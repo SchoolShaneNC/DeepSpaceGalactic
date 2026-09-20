@@ -55,14 +55,11 @@ namespace DeepSpaceGalactic
             enemies = new List<Enemy>();
 
             // Create enemies
-            Enemy smallEnemy = CreateEnemy<SmallEnemy>(
-                "EnemyShip1.png", 50, 100, 100);
+            Enemy smallEnemy = CreateEnemy<SmallEnemy>("EnemyShip1.png", 50, 100, 100);
 
-            Enemy regularEnemy = CreateEnemy<Enemy>(
-                "EnemyShip1.png", 70, 300, 100);
+            Enemy regularEnemy = CreateEnemy<Enemy>("EnemyShip1.png", 70, 300, 100);
 
-            Enemy largeEnemy = CreateEnemy<LargeEnemy>(
-                "EnemyShip2.png", 100, 500, 100);
+            Enemy largeEnemy = CreateEnemy<LargeEnemy>("EnemyShip2.png", 100, 500, 100);
 
             // Add enemies to the List
             enemies.Add(smallEnemy);
@@ -72,30 +69,22 @@ namespace DeepSpaceGalactic
             DateTimeOffset now = DateTimeOffset.UtcNow;
             foreach (Enemy enemy in enemies)
             {
-                enemyMovementStates.Add(enemy, new EnemyMovementState(now));
+                enemyMovementStates.Add(enemy,new EnemyMovementState(now, EnemyDirectionDecisionMilliseconds));
             }
         }
 
-        private Enemy CreateEnemy<T>(
-            string imageName,
-            int size,
-            int left,
-            int top) where T : Enemy
+        private Enemy CreateEnemy<T>(string imageName, int size, int left, int top) where T : Enemy
         {
-            GamePiece piece = GameLogic.CreatePiece(
-                imageName, size, left, top);
+            GamePiece piece = GameLogic.CreatePiece(imageName, size, left, top);
 
-            Enemy enemy = (Enemy)Activator.CreateInstance(
-                typeof(T), piece.Img);
+            Enemy enemy = (Enemy)Activator.CreateInstance(typeof(T), piece.Img);
 
             MainGrid.Children.Add(enemy.Img);
 
             return enemy;
         }
 
-        private void CoreWindow_KeyDown(
-            object sender,
-            Windows.UI.Core.KeyEventArgs e)
+        private void CoreWindow_KeyDown(object sender, Windows.UI.Core.KeyEventArgs e)
         {
             if (IsDirection(e.VirtualKey) && heldDirections.Add(e.VirtualKey))
             {
@@ -104,9 +93,7 @@ namespace DeepSpaceGalactic
             }
         }
 
-        private void CoreWindow_KeyUp(
-            object sender,
-            Windows.UI.Core.KeyEventArgs e)
+        private void CoreWindow_KeyUp(object sender, Windows.UI.Core.KeyEventArgs e)
         {
             if (IsDirection(e.VirtualKey))
             {
@@ -244,17 +231,6 @@ namespace DeepSpaceGalactic
             Loaded -= MainPage_Loaded;
         }
 
-        private sealed class EnemyMovementState
-        {
-            public int Direction { get; set; } = 1;
-            public DateTimeOffset DirectionLockedUntil { get; set; }
-            public DateTimeOffset NextDirectionDecision { get; set; }
 
-            public EnemyMovementState(DateTimeOffset now)
-            {
-                NextDirectionDecision = now.AddMilliseconds(
-                    EnemyDirectionDecisionMilliseconds);
-            }
-        }
     }
 }
