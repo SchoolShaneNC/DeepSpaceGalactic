@@ -23,7 +23,7 @@ namespace DSG_Library
             Lives = 3;
             Health = 100;
             FireRate = 0.5; //seconds between shots
-            Speed = 9;
+            Speed = 4;
             Score = 0;
         }
     }

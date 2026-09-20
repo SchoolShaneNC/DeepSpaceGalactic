@@ -9,7 +9,6 @@ namespace DeepSpaceGalactic
 {
     public sealed partial class MainPage : Page
     {
-        private const double MovementPerFrame = 5;
         private const int EnemyDirectionDecisionMilliseconds = 2000;
         private const int EnemyCollisionDirectionLockMilliseconds = 3000;
         private Player player;
@@ -199,21 +198,41 @@ namespace DeepSpaceGalactic
 
         private void MovePlayer()
         {
+            if (MainGrid.ActualWidth <= 0 || MainGrid.ActualHeight <= 0)
+            {
+                return;
+            }
+
             double horizontal = (heldDirections.Contains(Windows.System.VirtualKey.Right) ? 1 : 0)
-                              - (heldDirections.Contains(Windows.System.VirtualKey.Left) ? 1 : 0);
+                - (heldDirections.Contains(Windows.System.VirtualKey.Left) ? 1 : 0);
+
             double vertical = (heldDirections.Contains(Windows.System.VirtualKey.Down) ? 1 : 0)
-                            - (heldDirections.Contains(Windows.System.VirtualKey.Up) ? 1 : 0);
+                - (heldDirections.Contains(Windows.System.VirtualKey.Up) ? 1 : 0);
 
             if (horizontal != 0 && vertical != 0)
             {
-                const double diagonalMultiplier = 0.7071067811865476; // 1 / sqrt(2)
+                const double diagonalMultiplier = 0.7071067811865476;
                 horizontal *= diagonalMultiplier;
                 vertical *= diagonalMultiplier;
             }
 
-            player.Move(horizontal * MovementPerFrame, vertical * MovementPerFrame);
-        }
+            double newLeft = player.Position.Left + horizontal * player.Speed;
+            double newTop = player.Position.Top + vertical * player.Speed;
 
+            double maximumLeft = MainGrid.ActualWidth - player.Img.Width;
+            double minimumTop = MainGrid.ActualHeight * 0.50;
+            double maximumTop = MainGrid.ActualHeight - player.Img.Height;
+
+            if (maximumLeft < 0 || maximumTop < minimumTop)
+            {
+                return;
+            }
+
+            newLeft = Math.Max(0, Math.Min(newLeft, maximumLeft));
+            newTop = Math.Max(minimumTop, Math.Min(newTop, maximumTop));
+
+            player.Move(newLeft - player.Position.Left, newTop - player.Position.Top);
+        }
         private static bool IsDirection(Windows.System.VirtualKey key)
         {
             return key == Windows.System.VirtualKey.Up
