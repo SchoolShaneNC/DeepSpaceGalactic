@@ -54,11 +54,11 @@ namespace DeepSpaceGalactic
             enemies = new List<Enemy>();
 
             // Create enemies
-            Enemy smallEnemy = CreateEnemy<SmallEnemy>("EnemyShip1.png", 50, 100, 100);
+            Enemy smallEnemy = CreateEnemy<SmallEnemy>("EnemyShip1.png", 100, 100);
 
-            Enemy regularEnemy = CreateEnemy<Enemy>("EnemyShip1.png", 70, 300, 100);
+            Enemy regularEnemy = CreateEnemy<Enemy>("EnemyShip1.png", 300, 100);
 
-            Enemy largeEnemy = CreateEnemy<LargeEnemy>("EnemyShip2.png", 100, 500, 100);
+            Enemy largeEnemy = CreateEnemy<LargeEnemy>("EnemyShip2.png", 500, 100);
 
             // Add enemies to the List
             enemies.Add(smallEnemy);
@@ -72,11 +72,13 @@ namespace DeepSpaceGalactic
             }
         }
 
-        private Enemy CreateEnemy<T>(string imageName, int size, int left, int top) where T : Enemy
+        private Enemy CreateEnemy<T>(string imageName, int left, int top) where T : Enemy
         {
-            GamePiece piece = GameLogic.CreatePiece(imageName, size, left, top);
+            GamePiece piece = GameLogic.CreatePiece(imageName, left, top);
 
             Enemy enemy = (Enemy)Activator.CreateInstance(typeof(T), piece.Img);
+            enemy.Img.Width = enemy.Size;
+            enemy.Img.Height = enemy.Size;
 
             MainGrid.Children.Add(enemy.Img);
 
@@ -113,6 +115,7 @@ namespace DeepSpaceGalactic
         private void MainPage_Loaded(object sender, RoutedEventArgs e)
         {
             enemyMovementTimer.Start();
+
         }
 
         private void EnemyMovementTimer_Tick(object sender, object e)
