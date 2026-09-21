@@ -21,7 +21,7 @@ namespace DSG_Library
             VelocityY = 0;
 
             Health = 1;
-            PointValue = 50;
+            PointValue = 10;
         }
     }
 }

@@ -14,6 +14,7 @@ namespace DSG_Library
             Health = 1;
             PointValue = 150;
             Speed = 5.3;
+            Size = 20;
             Damage = 20;
             FireRate = 1.0; //seconds between shots
         }
