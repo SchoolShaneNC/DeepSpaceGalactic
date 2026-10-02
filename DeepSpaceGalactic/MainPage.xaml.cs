@@ -19,6 +19,7 @@ namespace DeepSpaceGalactic
         private readonly DispatcherTimer enemyMovementTimer;
         private readonly Dictionary<Enemy, EnemyMovementState> enemyMovementStates;
         private readonly Random random = new Random();
+        private DateTimeOffset nextPlayerShotTime;
 
         public MainPage()
         {
@@ -44,8 +45,9 @@ namespace DeepSpaceGalactic
             enemyMovementTimer.Tick += EnemyMovementTimer_Tick;
 
             // Create the player
-            GamePiece playerPiece = GameLogic.CreatePiece(
-                "SpaceShips/PlayerShip1.png", 80, 400, 500);
+            GamePiece playerPiece = GameLogic.CreatePiece("SpaceShips/PlayerShip1.png", 80, 400, 500);
+            //sets shot timer to lowest value to start
+            nextPlayerShotTime = DateTimeOffset.MinValue;
 
             player = new Player(playerPiece.Img);
 
@@ -93,6 +95,7 @@ namespace DeepSpaceGalactic
             if (e.VirtualKey == Windows.System.VirtualKey.Space)
             {
                 CreatePlayerProjectile();
+
                 return;
             }
 
@@ -167,23 +170,38 @@ namespace DeepSpaceGalactic
 
         private void CreatePlayerProjectile()
         {
+            //checks if player is allowed to shoot. 
+            if (DateTimeOffset.UtcNow < nextPlayerShotTime)
+            {
+                return;
+            }
+
+            //creates a projectile at the center of the player and moves it just above the player
             const int projectileSize = 15;
+            //finds the middle of the player image
             int left = (int)(player.Position.Left + (player.Img.Width - projectileSize) / 2);
+            //finds the top of the player image and moves the projectile just above it
             int top = (int)(player.Position.Top - projectileSize);
             GamePiece piece = GameLogic.CreatePiece("LazerBeams/BlueLazerBeam.png", projectileSize, left, top);
 
             Projectile projectile = new Projectile(piece.Img)
             {
-                VelocityX = 0,
-                VelocityY = -18
+                VelocityX = 0,  //horizontal pixels per tick
+                VelocityY = -18  //vertical pixels per tick
             };
 
             projectiles.Add(projectile);
             MainGrid.Children.Add(projectile.Img);
+
+            //after player shoots, sets the next time the player is allowed to shoot based on the player's fire rate
+            nextPlayerShotTime = DateTimeOffset.UtcNow.AddSeconds(player.FireRate);
+
         }
 
         private void MoveProjectiles()
         {
+            //loops through projectile list backwards so that we can remove projectiles from the list without affecting the loop
+            //moves each projectile based on its velocity and removes it from the list if it has moved off the top of the screen
             for (int index = projectiles.Count - 1; index >= 0; index--)
             {
                 Projectile projectile = projectiles[index];
