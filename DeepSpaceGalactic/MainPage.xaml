@@ -10,6 +10,7 @@
     
 
     <Grid x:Name="MainGrid">
+        <TextBlock x:Name="txtTest" HorizontalAlignment="Left" Height="64"  TextWrapping="Wrap" Text="Textblock" VerticalAlignment="Top" Width="290" FontSize="20"/>
 
     </Grid>
 </Page>

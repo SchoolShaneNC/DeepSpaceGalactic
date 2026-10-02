@@ -126,6 +126,7 @@
     <Compile Include="GameLogic.cs" />
     <Compile Include="GamePiece.cs" />
     <Compile Include="LargeEnemy.cs" />
+    <Compile Include="MediumEnemy.cs" />
     <Compile Include="Player.cs" />
     <Compile Include="Projectile.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

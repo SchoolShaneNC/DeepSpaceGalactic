@@ -1,4 +1,5 @@
-﻿using System;
+﻿using DSG_Library;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -9,22 +10,87 @@ namespace DSG_Library
 {
     public class Enemy : GamePiece
     {
-        public int Health { get; set; }
-        public int PointValue { get; set; }
-        public double Speed { get; set; }
-        public int Damage { get; set; }
-        public double FireRate { get; set; }
+        private int health;
+        private int pointValue;
+        private double speed;
+        private int damage;
+        private double fireRate;
+        private int size;
 
-        public int Size { get; set; }
+        public int Health
+        {
+            get { return health; }
+            set
+            {
+                if (value > 0)
+                    health = value;
+                else
+                    health = 2;
+            }
+        }
+
+        public int PointValue
+        {
+            get { return pointValue; }
+            set
+            {
+                if (value >= 0)
+                    pointValue = value;
+                else
+                    pointValue = 100;
+            }
+        }
+
+        public double Speed
+        {
+            get { return speed; }
+            set
+            {
+                if (value > 0)
+                    speed = value;
+                else
+                    speed = 3.6;
+            }
+        }
+
+        public int Damage
+        {
+            get { return damage; }
+            set
+            {
+                if (value > 0)
+                    damage = value;
+                else
+                    damage = 35;
+            }
+        }
+
+        public double FireRate
+        {
+            get { return fireRate; }
+            set
+            {
+                if (value > 0)
+                    fireRate = value;
+                else
+                    fireRate = 1.5;
+            }
+        }
+
+        public int Size
+        {
+            get { return size; }
+            set
+            {
+                if (value > 0)
+                    size = value;
+                else
+                    size = 40;
+            }
+        }
 
         public Enemy(Image img) : base(img)
         {
-            Health = 2;
-            PointValue = 100;
-            Speed = 3.6;
-            Size = 40;
-            Damage = 35;
-            FireRate = 1.5; // shots per idk yet  prolly seconds between shots
         }
     }
 }

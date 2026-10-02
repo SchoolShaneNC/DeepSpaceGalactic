@@ -9,8 +9,8 @@ namespace DeepSpaceGalactic
 {
     public sealed partial class MainPage : Page
     {
-        private const int EnemyDirectionDecisionMilliseconds = 2000;
-        private const int EnemyCollisionDirectionLockMilliseconds = 3000;
+        private const int EnemyDirectionDecisionMilliseconds = 1700;
+        private const int EnemyCollisionDirectionLockMilliseconds = 2700;
         private Player player;
         private List<Enemy> enemies;
         private readonly HashSet<Windows.System.VirtualKey> heldDirections;
@@ -56,7 +56,7 @@ namespace DeepSpaceGalactic
             // Create enemies
             Enemy smallEnemy = CreateEnemy<SmallEnemy>("EnemyShip1.png", 100, 100);
 
-            Enemy regularEnemy = CreateEnemy<Enemy>("EnemyShip1.png", 300, 100);
+            Enemy regularEnemy = CreateEnemy<MediumEnemy>("EnemyShip1.png", 300, 100);
 
             Enemy largeEnemy = CreateEnemy<LargeEnemy>("EnemyShip2.png", 500, 100);
 
@@ -70,6 +70,7 @@ namespace DeepSpaceGalactic
             {
                 enemyMovementStates.Add(enemy,new EnemyMovementState(now, EnemyDirectionDecisionMilliseconds));
             }
+
         }
 
         private Enemy CreateEnemy<T>(string imageName, int left, int top) where T : Enemy
