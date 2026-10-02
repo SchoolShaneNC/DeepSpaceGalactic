@@ -13,6 +13,7 @@ namespace DeepSpaceGalactic
         private const int EnemyCollisionDirectionLockMilliseconds = 2700;
         private Player player;
         private List<Enemy> enemies;
+        private List<Projectile> projectiles;
         private readonly HashSet<Windows.System.VirtualKey> heldDirections;
         private readonly DispatcherTimer movementTimer;
         private readonly DispatcherTimer enemyMovementTimer;
@@ -44,7 +45,7 @@ namespace DeepSpaceGalactic
 
             // Create the player
             GamePiece playerPiece = GameLogic.CreatePiece(
-                "PlayerShip1.png", 80, 400, 500);
+                "SpaceShips/PlayerShip1.png", 80, 400, 500);
 
             player = new Player(playerPiece.Img);
 
@@ -52,13 +53,14 @@ namespace DeepSpaceGalactic
 
             // Create the enemy collection
             enemies = new List<Enemy>();
+            projectiles = new List<Projectile>();
 
             // Create enemies
-            Enemy smallEnemy = CreateEnemy<SmallEnemy>("EnemyShip1.png", 100, 100);
+            Enemy smallEnemy = CreateEnemy<SmallEnemy>("SpaceShips/EnemyShip1.png", 100, 100);
 
-            Enemy regularEnemy = CreateEnemy<MediumEnemy>("EnemyShip1.png", 300, 100);
+            Enemy regularEnemy = CreateEnemy<MediumEnemy>("SpaceShips/EnemyShip1.png", 300, 100);
 
-            Enemy largeEnemy = CreateEnemy<LargeEnemy>("EnemyShip2.png", 500, 100);
+            Enemy largeEnemy = CreateEnemy<LargeEnemy>("SpaceShips/EnemyShip2.png", 500, 100);
 
             // Add enemies to the List
             enemies.Add(smallEnemy);
@@ -88,6 +90,12 @@ namespace DeepSpaceGalactic
 
         private void CoreWindow_KeyDown(object sender, Windows.UI.Core.KeyEventArgs e)
         {
+            if (e.VirtualKey == Windows.System.VirtualKey.Space)
+            {
+                CreatePlayerProjectile();
+                return;
+            }
+
             if (IsDirection(e.VirtualKey) && heldDirections.Add(e.VirtualKey))
             {
                 MovePlayer(); // Move once immediately instead of waiting for the first timer tick.
@@ -154,6 +162,39 @@ namespace DeepSpaceGalactic
             }
 
             ReverseCollidingEnemies(now);
+            MoveProjectiles();
+        }
+
+        private void CreatePlayerProjectile()
+        {
+            const int projectileSize = 15;
+            int left = (int)(player.Position.Left + (player.Img.Width - projectileSize) / 2);
+            int top = (int)(player.Position.Top - projectileSize);
+            GamePiece piece = GameLogic.CreatePiece("LazerBeams/BlueLazerBeam.png", projectileSize, left, top);
+
+            Projectile projectile = new Projectile(piece.Img)
+            {
+                VelocityX = 0,
+                VelocityY = -18
+            };
+
+            projectiles.Add(projectile);
+            MainGrid.Children.Add(projectile.Img);
+        }
+
+        private void MoveProjectiles()
+        {
+            for (int index = projectiles.Count - 1; index >= 0; index--)
+            {
+                Projectile projectile = projectiles[index];
+                projectile.Move(projectile.VelocityX, projectile.VelocityY);
+
+                if (projectile.Position.Top + projectile.Img.Height < 0)
+                {
+                    projectiles.RemoveAt(index);
+                    MainGrid.Children.Remove(projectile.Img);
+                }
+            }
         }
 
         private void MoveEnemyWithinGrid(Enemy enemy, EnemyMovementState state, DateTimeOffset now)
