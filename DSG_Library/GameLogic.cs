@@ -21,11 +21,13 @@ namespace DSG_Library
 
         public static GamePiece CreatePiece(string imgSrc, int left, int top)
         {
-            string imageName = "Img" + char.ToUpper(imgSrc[0]) + imgSrc.Remove(imgSrc.IndexOf('.')).Substring(1);
+            string fileName = imgSrc.Substring(imgSrc.LastIndexOf('/') + 1);
+            string imageName = "Img" + char.ToUpper(fileName[0])
+                + fileName.Remove(fileName.IndexOf('.')).Substring(1);
 
             Image img = new Image
             {
-                Source = new BitmapImage(new Uri($"ms-appx:///Assets/SpaceShips/{imgSrc}")),
+                Source = new BitmapImage(new Uri($"ms-appx:///Assets/{imgSrc}")),
                 Name = imageName,
                 Margin = new Thickness(left, top, 0, 0),
                 VerticalAlignment = VerticalAlignment.Top,

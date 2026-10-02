@@ -9,11 +9,53 @@ namespace DSG_Library
 {
     public class Asteroid : GamePiece
     {
-        public double VelocityX { get; set; }
-        public double VelocityY { get; set; }
+        private double velocityX;
+        private double velocityY;
 
-        public int Health { get; set; }
-        public int PointValue { get; set; }
+        private int health;
+        private int pointValue;
+
+        public double VelocityX
+        {
+            get { return velocityX; }
+            set
+            {
+                velocityX = value;
+            }
+        }
+
+        public double VelocityY
+        {
+            get { return velocityY; }
+            set
+            {
+                velocityY = value;
+            }
+        }
+
+        public int Health
+        {
+            get { return health; }
+            set
+            {
+                if (value > 0)
+                    health = value;
+                else
+                    health = 1;
+            }
+        }
+
+        public int PointValue
+        {
+            get { return pointValue; }
+            set
+            {
+                if (value >= 0)
+                    pointValue = value;
+                else
+                    pointValue = 0;
+            }
+        }
 
         public Asteroid(Image img) : base(img)
         {
