@@ -18,6 +18,7 @@ namespace DeepSpaceGalactic
         private readonly DispatcherTimer movementTimer;
         private readonly DispatcherTimer enemyMovementTimer;
         private readonly Dictionary<Enemy, EnemyMovementState> enemyMovementStates;
+        private readonly Dictionary<Enemy, EnemyCombatState> enemyCombatStates;
         private readonly Random random = new Random();
         private DateTimeOffset nextPlayerShotTime;
 
@@ -38,6 +39,7 @@ namespace DeepSpaceGalactic
             movementTimer.Tick += MovementTimer_Tick;
 
             enemyMovementStates = new Dictionary<Enemy, EnemyMovementState>();
+            enemyCombatStates = new Dictionary<Enemy, EnemyCombatState>();
             enemyMovementTimer = new DispatcherTimer
             {
                 Interval = TimeSpan.FromMilliseconds(16)
@@ -73,6 +75,8 @@ namespace DeepSpaceGalactic
             foreach (Enemy enemy in enemies)
             {
                 enemyMovementStates.Add(enemy,new EnemyMovementState(now, EnemyDirectionDecisionMilliseconds));
+                enemyCombatStates.Add(enemy, new EnemyCombatState());
+            
             }
 
         }
@@ -162,6 +166,15 @@ namespace DeepSpaceGalactic
                 }
 
                 MoveEnemyWithinGrid(enemy, state, now);
+
+                EnemyCombatState combatState = enemyCombatStates[enemy];
+                if (now >= combatState.NextShotTime)
+                {
+                    CreateEnemyProjectile(enemy);
+
+                    combatState.NextShotTime =
+                        now.AddSeconds(enemy.FireRate);
+                }
             }
 
             ReverseCollidingEnemies(now);
@@ -198,6 +211,25 @@ namespace DeepSpaceGalactic
 
         }
 
+        private void CreateEnemyProjectile(Enemy enemy)
+        {
+            const int projectileSize = 15;
+
+            int left =(int)(enemy.Position.Left + (enemy.Img.Width - projectileSize) / 2);
+            int top = (int)(enemy.Position.Top + enemy.Img.Height);
+
+            GamePiece piece = GameLogic.CreatePiece("LazerBeams/RedLazerBeam.png", projectileSize, left, top);
+
+            Projectile projectile = new Projectile(piece.Img)
+            {
+                    VelocityX = 0,
+                    VelocityY = 18
+            };
+
+            projectiles.Add(projectile);
+            MainGrid.Children.Add(projectile.Img);
+        }
+
         private void MoveProjectiles()
         {
             //loops through projectile list backwards so that we can remove projectiles from the list without affecting the loop
@@ -214,6 +246,9 @@ namespace DeepSpaceGalactic
                 }
             }
         }
+
+   
+
 
         private void MoveEnemyWithinGrid(Enemy enemy, EnemyMovementState state, DateTimeOffset now)
         {
