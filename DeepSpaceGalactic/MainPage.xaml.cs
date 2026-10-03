@@ -197,11 +197,7 @@ namespace DeepSpaceGalactic
             int top = (int)(player.Position.Top - projectileSize);
             GamePiece piece = GameLogic.CreatePiece("LazerBeams/BlueLazerBeam.png", projectileSize, left, top);
 
-            Projectile projectile = new Projectile(piece.Img)
-            {
-                VelocityX = 0,  //horizontal pixels per tick
-                VelocityY = -18  //vertical pixels per tick
-            };
+            Projectile projectile = new Projectile(piece.Img, 0, -18, player.Damage, true);
 
             projectiles.Add(projectile);
             MainGrid.Children.Add(projectile.Img);
@@ -220,11 +216,7 @@ namespace DeepSpaceGalactic
 
             GamePiece piece = GameLogic.CreatePiece("LazerBeams/RedLazerBeam.png", projectileSize, left, top);
 
-            Projectile projectile = new Projectile(piece.Img)
-            {
-                    VelocityX = 0,
-                    VelocityY = 18
-            };
+            Projectile projectile = new Projectile(piece.Img, 0, 18, enemy.Damage, false);
 
             projectiles.Add(projectile);
             MainGrid.Children.Add(projectile.Img);
