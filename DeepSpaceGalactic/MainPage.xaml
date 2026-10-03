@@ -6,11 +6,11 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
-    Background="White">
-    
+    Background="Black">
+
 
     <Grid x:Name="MainGrid">
-        <TextBlock x:Name="txtTest" HorizontalAlignment="Left" Height="64"  TextWrapping="Wrap" Text="Textblock" VerticalAlignment="Top" Width="290" FontSize="20"/>
+        <TextBlock x:Name="txtTest" HorizontalAlignment="Left" Height="161"  TextWrapping="Wrap" Text="Textblockffff" VerticalAlignment="Top" Width="431" FontSize="40" RequestedTheme="Dark" FocusVisualPrimaryBrush="Black" FocusVisualSecondaryBrush="#99000000"/>
 
     </Grid>
 </Page>
