@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Windows.UI.Xaml.Controls;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace DSG_Library
 {
@@ -15,6 +16,7 @@ namespace DSG_Library
         private double firerate;
         private double speed;
         private int score;
+        private int damage;
 
         public int Lives { get { return lives; } 
             set 
@@ -65,13 +67,27 @@ namespace DSG_Library
             }
         }
 
-        public Player(Image img) : base(img)
+        public int Damage
+        {
+            get { return damage; }
+            set
+            {
+                if (value > 0)
+                    damage = value;
+                else
+                    damage = 1;
+            }
+        }
+
+        //out of nowhere it gave ambigius error for image so for time being just fully clarified what Image type
+        public Player(Windows.UI.Xaml.Controls.Image img) : base(img)
         {
             Lives = 3;
             Health = 100;
             FireRate = 0.5; //seconds between shots
             Speed = 9;
             Score = 0;
+            Damage = 1;
         }
     }
 }

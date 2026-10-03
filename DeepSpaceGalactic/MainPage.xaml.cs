@@ -11,9 +11,16 @@ namespace DeepSpaceGalactic
     {
         private const int EnemyDirectionDecisionMilliseconds = 1700;
         private const int EnemyCollisionDirectionLockMilliseconds = 2700;
+        private const double MinimumAsteroidSpawnSeconds = 0.7;
+        private const double MaximumAsteroidSpawnSeconds = 2.0;
+        private const int MinimumAsteroidsPerSpawn = 1;
+        private const int MaximumAsteroidsPerSpawn = 4;
+        private const int MinimumAsteroidSize = 25;
+        private const int MaximumAsteroidSize = 75;
         private Player player;
         private List<Enemy> enemies;
         private List<Projectile> projectiles;
+        private List<Asteroid> asteroids;
         private readonly HashSet<Windows.System.VirtualKey> heldDirections;
         private readonly DispatcherTimer movementTimer;
         private readonly DispatcherTimer enemyMovementTimer;
@@ -21,6 +28,7 @@ namespace DeepSpaceGalactic
         private readonly Dictionary<Enemy, EnemyCombatState> enemyCombatStates;
         private readonly Random random = new Random();
         private DateTimeOffset nextPlayerShotTime;
+        private DateTimeOffset nextAsteroidSpawnTime;
 
         public MainPage()
         {
@@ -58,6 +66,7 @@ namespace DeepSpaceGalactic
             // Create the enemy collection
             enemies = new List<Enemy>();
             projectiles = new List<Projectile>();
+            asteroids = new List<Asteroid>();
 
             // Create enemies
             Enemy smallEnemy = CreateEnemy<SmallEnemy>("SpaceShips/EnemyShip1.png", 100, 100);
@@ -79,6 +88,7 @@ namespace DeepSpaceGalactic
             
             }
 
+            txtTest.Text = $"{player.Health}, {player.Speed}, {player.Damage}, {player.FireRate}";
         }
 
         private Enemy CreateEnemy<T>(string imageName, int left, int top) where T : Enemy
@@ -130,13 +140,14 @@ namespace DeepSpaceGalactic
 
         private void MainPage_Loaded(object sender, RoutedEventArgs e)
         {
+            ScheduleNextAsteroidSpawn(DateTimeOffset.UtcNow);
             enemyMovementTimer.Start();
 
         }
 
         private void EnemyMovementTimer_Tick(object sender, object e)
         {
-            if (MainGrid.ActualWidth <= 0)
+            if (MainGrid.ActualWidth <= 0 || MainGrid.ActualHeight <= 0)
             {
                 return;
             }
@@ -179,6 +190,102 @@ namespace DeepSpaceGalactic
 
             ReverseCollidingEnemies(now);
             MoveProjectiles();
+            SpawnAndMoveAsteroids(now);
+        }
+
+        private void SpawnAndMoveAsteroids(DateTimeOffset now)
+        {
+            if (now >= nextAsteroidSpawnTime)
+            {
+                int asteroidCount = GetAsteroidsPerSpawn();
+                for (int count = 0; count < asteroidCount; count++)
+                {
+                    CreateAsteroid();
+                }
+
+                ScheduleNextAsteroidSpawn(now);
+            }
+
+            for (int index = asteroids.Count - 1; index >= 0; index--)
+            {
+                Asteroid asteroid = asteroids[index];
+                asteroid.Move(asteroid.VelocityX, asteroid.VelocityY);
+
+                if (asteroid.Position.Top + asteroid.Img.Height < 0
+                    || asteroid.Position.Left + asteroid.Img.Width < 0
+                    || asteroid.Position.Left > MainGrid.ActualWidth
+                    || asteroid.Position.Top > MainGrid.ActualHeight)
+                {
+                    asteroids.RemoveAt(index);
+                    MainGrid.Children.Remove(asteroid.Img);
+                }
+            }
+        }
+
+        private void CreateAsteroid()
+        {
+            int size = random.Next(MinimumAsteroidSize, MaximumAsteroidSize + 1);
+            int left;
+            int top;
+            int spawnEdge = random.Next(3);
+            double velocityX;
+
+            if (spawnEdge == 0)
+            {
+                left = random.Next(0, Math.Max(1, (int)MainGrid.ActualWidth - size + 1));
+                top = -size;
+                velocityX = GetAsteroidHorizontalVelocity();
+            }
+            else if (spawnEdge == 1)
+            {
+                left = -size;
+                top = random.Next(0, Math.Max(1, (int)(MainGrid.ActualHeight / 2)));
+                velocityX = random.Next(1, 4);
+            }
+            else
+            {
+                left = (int)MainGrid.ActualWidth;
+                top = random.Next(0, Math.Max(1, (int)(MainGrid.ActualHeight / 2)));
+                velocityX = -random.Next(1, 4);
+            }
+
+            string imageName = random.Next(2) == 0
+                ? "Astriods/Astriod1.png"
+                : "Astriods/Astriod2.png";
+            GamePiece piece = GameLogic.CreatePiece(imageName, size, left, top);
+            Asteroid asteroid = new Asteroid(piece.Img)
+            {
+                VelocityX = velocityX,
+                VelocityY = random.Next(2, 6)
+            };
+
+            asteroids.Add(asteroid);
+            MainGrid.Children.Add(asteroid.Img);
+        }
+
+        private int GetAsteroidsPerSpawn()
+        {
+            // 1 and 2 are common; 3 is less common; 4 is an occasional burst.
+            int weightedChoice = random.Next(10);
+            int count = weightedChoice < 4 ? 1
+                : weightedChoice < 7 ? 2
+                : weightedChoice < 9 ? 3
+                : 4;
+
+            return Math.Max(MinimumAsteroidsPerSpawn, Math.Min(count, MaximumAsteroidsPerSpawn));
+        }
+
+        private double GetAsteroidHorizontalVelocity()
+        {
+            int horizontalSpeed = random.Next(0, 4);
+            return random.Next(2) == 0 ? -horizontalSpeed : horizontalSpeed;
+        }
+
+        private void ScheduleNextAsteroidSpawn(DateTimeOffset now)
+        {
+            double delay = MinimumAsteroidSpawnSeconds
+                + random.NextDouble() * (MaximumAsteroidSpawnSeconds - MinimumAsteroidSpawnSeconds);
+            nextAsteroidSpawnTime = now.AddSeconds(delay);
         }
 
         private void CreatePlayerProjectile()
@@ -197,11 +304,7 @@ namespace DeepSpaceGalactic
             int top = (int)(player.Position.Top - projectileSize);
             GamePiece piece = GameLogic.CreatePiece("LazerBeams/BlueLazerBeam.png", projectileSize, left, top);
 
-            Projectile projectile = new Projectile(piece.Img)
-            {
-                VelocityX = 0,  //horizontal pixels per tick
-                VelocityY = -18  //vertical pixels per tick
-            };
+            Projectile projectile = new Projectile(piece.Img, 0, -18, player.Damage, true);
 
             projectiles.Add(projectile);
             MainGrid.Children.Add(projectile.Img);
@@ -220,11 +323,7 @@ namespace DeepSpaceGalactic
 
             GamePiece piece = GameLogic.CreatePiece("LazerBeams/RedLazerBeam.png", projectileSize, left, top);
 
-            Projectile projectile = new Projectile(piece.Img)
-            {
-                    VelocityX = 0,
-                    VelocityY = 18
-            };
+            Projectile projectile = new Projectile(piece.Img, 0, 18, enemy.Damage, false);
 
             projectiles.Add(projectile);
             MainGrid.Children.Add(projectile.Img);
@@ -248,8 +347,6 @@ namespace DeepSpaceGalactic
         }
 
    
-
-
         private void MoveEnemyWithinGrid(Enemy enemy, EnemyMovementState state, DateTimeOffset now)
         {
             double maximumLeft = MainGrid.ActualWidth - enemy.Img.Width;
