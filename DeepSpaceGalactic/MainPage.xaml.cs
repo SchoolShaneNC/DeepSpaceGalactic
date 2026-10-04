@@ -563,10 +563,5 @@ namespace DeepSpaceGalactic
             player.Move(newLeft - player.Position.Left, newTop - player.Position.Top);
         }
         #endregion
-
-
-  
-
-
     }
 }
