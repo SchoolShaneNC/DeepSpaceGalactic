@@ -21,20 +21,14 @@ namespace DSG_Library
         public int Lives { get { return lives; } 
             set 
             { 
-                if (value > 0 && value < 6)
-                    lives = value;
-                else
-                    lives = 3; 
+                lives = Math.Max(0, Math.Min(6, value));
             } 
         }
 
         public int Health { get { return health;  } 
             set 
             {
-                if (value > 0 && value < 200)
-                    health = value;
-                else
-                    health = 100;
+                health = Math.Max(0, Math.Min(200, value));
             } 
         }
 
@@ -78,6 +72,33 @@ namespace DSG_Library
                     damage = 1;
             }
         }
+
+        //public int Lives
+        //{
+        //    get { return lives; }
+        //    set
+        //    {
+        //        if (value > 0 && value < 6)
+        //            lives = value;
+        //        else
+        //            lives = 3;
+        //    }
+        //}
+
+
+        //public int Health
+        //{
+        //    get { return health; }
+        //    set
+        //    {
+        //        if (value > 0 && value < 200)
+        //            health = value;
+        //        else
+        //            health = 100;
+        //    }
+        //}
+
+
 
         //out of nowhere it gave ambigius error for image so for time being just fully clarified what Image type
         public Player(Windows.UI.Xaml.Controls.Image img) : base(img)

@@ -15,8 +15,8 @@ namespace DeepSpaceGalactic
         private const double MaximumAsteroidSpawnSeconds = 2.0;
         private const int MinimumAsteroidsPerSpawn = 1;
         private const int MaximumAsteroidsPerSpawn = 4;
-        private const int MinimumAsteroidSize = 25;
-        private const int MaximumAsteroidSize = 75;
+        private const int MinimumAsteroidSize = 35;
+        private const int MaximumAsteroidSize = 80;
         private Player player;
         private List<Enemy> enemies;
         private List<Projectile> projectiles;
@@ -88,7 +88,7 @@ namespace DeepSpaceGalactic
             
             }
 
-            txtTest.Text = $"{player.Health}, {player.Speed}, {player.Damage}, {player.FireRate}";
+           // txtTest.Text = $"{player.Health}, {player.Speed}, {player.Damage}, {player.FireRate}";
         }
 
         private Enemy CreateEnemy<T>(string imageName, int left, int top) where T : Enemy
@@ -191,6 +191,116 @@ namespace DeepSpaceGalactic
             ReverseCollidingEnemies(now);
             MoveProjectiles();
             SpawnAndMoveAsteroids(now);
+            ProcessCollisions();
+        }
+
+        private void ProcessCollisions()
+        {
+            HashSet<Projectile> destroyedProjectiles = new HashSet<Projectile>();
+            HashSet<Asteroid> destroyedAsteroids = new HashSet<Asteroid>();
+            HashSet<Enemy> destroyedEnemies = new HashSet<Enemy>();
+
+            foreach (Projectile projectile in projectiles)
+            {
+                if (projectile.IsPlayerProjectile)
+                {
+                    foreach (Enemy enemy in enemies)
+                    {
+                        if (destroyedEnemies.Contains(enemy) || !GameLogic.IsCollision(projectile, enemy))
+                        {
+                            continue;
+                        }
+
+                        enemy.Health -= player.Damage;
+                        destroyedProjectiles.Add(projectile);
+
+                        if (enemy.Health <= 0)
+                        {
+                            player.Score += enemy.PointValue;
+                            destroyedEnemies.Add(enemy);
+                        }
+
+                        break;
+                    }
+
+                    if (destroyedProjectiles.Contains(projectile))
+                    {
+                        continue;
+                    }
+                }
+                else if (GameLogic.IsCollision(projectile, player))
+                {
+                    ApplyDamageToPlayer(projectile.Damage);
+                    destroyedProjectiles.Add(projectile);
+                    continue;
+                }
+
+                foreach (Asteroid asteroid in asteroids)
+                {
+                    if (destroyedAsteroids.Contains(asteroid) || !GameLogic.IsCollision(projectile, asteroid))
+                    {
+                        continue;
+                    }
+
+                    destroyedProjectiles.Add(projectile);
+                    destroyedAsteroids.Add(asteroid);
+                    break;
+                }
+            }
+
+            foreach (Asteroid asteroid in asteroids)
+            {
+                if (!destroyedAsteroids.Contains(asteroid) && GameLogic.IsCollision(player, asteroid))
+                {
+                    ApplyDamageToPlayer(asteroid.Damage);
+                    destroyedAsteroids.Add(asteroid);
+                }
+            }
+
+            RemoveDestroyedProjectiles(destroyedProjectiles);
+            RemoveDestroyedAsteroids(destroyedAsteroids);
+            RemoveDestroyedEnemies(destroyedEnemies);
+        }
+
+        private void ApplyDamageToPlayer(int damage)
+        {
+            int healthBeforeHit = player.Health;
+            player.Health -= damage;
+
+            if (healthBeforeHit > 0 && player.Health == 0)
+            {
+                player.Lives -= 1;
+            }
+            txtTest.Text = $"Health: {player.Health.ToString()} Lives: {player.Lives.ToString()}";
+        }
+
+        private void RemoveDestroyedProjectiles(IEnumerable<Projectile> destroyedProjectiles)
+        {
+            foreach (Projectile projectile in destroyedProjectiles)
+            {
+                projectiles.Remove(projectile);
+                MainGrid.Children.Remove(projectile.Img);
+            }
+        }
+
+        private void RemoveDestroyedAsteroids(IEnumerable<Asteroid> destroyedAsteroids)
+        {
+            foreach (Asteroid asteroid in destroyedAsteroids)
+            {
+                asteroids.Remove(asteroid);
+                MainGrid.Children.Remove(asteroid.Img);
+            }
+        }
+
+        private void RemoveDestroyedEnemies(IEnumerable<Enemy> destroyedEnemies)
+        {
+            foreach (Enemy enemy in destroyedEnemies)
+            {
+                enemies.Remove(enemy);
+                enemyMovementStates.Remove(enemy);
+                enemyCombatStates.Remove(enemy);
+                MainGrid.Children.Remove(enemy.Img);
+            }
         }
 
         private void SpawnAndMoveAsteroids(DateTimeOffset now)
@@ -239,19 +349,17 @@ namespace DeepSpaceGalactic
             else if (spawnEdge == 1)
             {
                 left = -size;
-                top = random.Next(0, Math.Max(1, (int)(MainGrid.ActualHeight / 2)));
+                top = random.Next(0, Math.Max(1, (int)(MainGrid.ActualHeight / 2.5)));
                 velocityX = random.Next(1, 4);
             }
             else
             {
                 left = (int)MainGrid.ActualWidth;
-                top = random.Next(0, Math.Max(1, (int)(MainGrid.ActualHeight / 2)));
+                top = random.Next(0, Math.Max(1, (int)(MainGrid.ActualHeight / 2.5)));
                 velocityX = -random.Next(1, 4);
             }
 
-            string imageName = random.Next(2) == 0
-                ? "Astriods/Astriod1.png"
-                : "Astriods/Astriod2.png";
+            string imageName = random.Next(2) == 0 ? "Astriods/Astriod1.png" : "Astriods/Astriod2.png";
             GamePiece piece = GameLogic.CreatePiece(imageName, size, left, top);
             Asteroid asteroid = new Asteroid(piece.Img)
             {
@@ -277,14 +385,13 @@ namespace DeepSpaceGalactic
 
         private double GetAsteroidHorizontalVelocity()
         {
-            int horizontalSpeed = random.Next(0, 4);
+            int horizontalSpeed = random.Next(0, 6);
             return random.Next(2) == 0 ? -horizontalSpeed : horizontalSpeed;
         }
 
         private void ScheduleNextAsteroidSpawn(DateTimeOffset now)
         {
-            double delay = MinimumAsteroidSpawnSeconds
-                + random.NextDouble() * (MaximumAsteroidSpawnSeconds - MinimumAsteroidSpawnSeconds);
+            double delay = MinimumAsteroidSpawnSeconds + random.NextDouble() * (MaximumAsteroidSpawnSeconds - MinimumAsteroidSpawnSeconds);
             nextAsteroidSpawnTime = now.AddSeconds(delay);
         }
 
@@ -338,15 +445,18 @@ namespace DeepSpaceGalactic
                 Projectile projectile = projectiles[index];
                 projectile.Move(projectile.VelocityX, projectile.VelocityY);
 
-                if (projectile.Position.Top + projectile.Img.Height < 0)
+                //checks if a projectile is out of the playing area then removes it, checks top then bottom then the sides
+                if (projectile.Position.Top + projectile.Img.Height < 0 || projectile.Position.Top > MainGrid.ActualHeight
+                    || projectile.Position.Left + projectile.Img.Width < 0
+                    || projectile.Position.Left > MainGrid.ActualWidth)
                 {
                     projectiles.RemoveAt(index);
                     MainGrid.Children.Remove(projectile.Img);
                 }
+             //   txtTest.Text = projectiles.Count.ToString();
             }
         }
 
-   
         private void MoveEnemyWithinGrid(Enemy enemy, EnemyMovementState state, DateTimeOffset now)
         {
             double maximumLeft = MainGrid.ActualWidth - enemy.Img.Width;
