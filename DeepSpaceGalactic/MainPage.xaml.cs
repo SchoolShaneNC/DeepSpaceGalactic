@@ -90,7 +90,20 @@ namespace DeepSpaceGalactic
 
            // txtTest.Text = $"{player.Health}, {player.Speed}, {player.Damage}, {player.FireRate}";
         }
+        private void MainPage_Loaded(object sender, RoutedEventArgs e)
+        {
+            ScheduleNextAsteroidSpawn(DateTimeOffset.UtcNow);
+            enemyMovementTimer.Start();
 
+        }
+        private void MainPage_Unloaded(object sender, RoutedEventArgs e)
+        {
+            movementTimer.Stop();
+            enemyMovementTimer.Stop();
+            Window.Current.CoreWindow.KeyDown -= CoreWindow_KeyDown;
+            Window.Current.CoreWindow.KeyUp -= CoreWindow_KeyUp;
+            Loaded -= MainPage_Loaded;
+        }
         private Enemy CreateEnemy<T>(string imageName, int left, int top) where T : Enemy
         {
             GamePiece piece = GameLogic.CreatePiece(imageName, left, top);
@@ -104,6 +117,7 @@ namespace DeepSpaceGalactic
             return enemy;
         }
 
+        #region Keybaord input
         private void CoreWindow_KeyDown(object sender, Windows.UI.Core.KeyEventArgs e)
         {
             if (e.VirtualKey == Windows.System.VirtualKey.Space)
@@ -133,18 +147,22 @@ namespace DeepSpaceGalactic
             }
         }
 
+        private static bool IsDirection(Windows.System.VirtualKey key)
+        {
+            return key == Windows.System.VirtualKey.Up
+                || key == Windows.System.VirtualKey.Down
+                || key == Windows.System.VirtualKey.Left
+                || key == Windows.System.VirtualKey.Right;
+        }
+
+
+        #endregion
+
+        #region Timer ticks
         private void MovementTimer_Tick(object sender, object e)
         {
             MovePlayer();
         }
-
-        private void MainPage_Loaded(object sender, RoutedEventArgs e)
-        {
-            ScheduleNextAsteroidSpawn(DateTimeOffset.UtcNow);
-            enemyMovementTimer.Start();
-
-        }
-
         private void EnemyMovementTimer_Tick(object sender, object e)
         {
             if (MainGrid.ActualWidth <= 0 || MainGrid.ActualHeight <= 0)
@@ -161,8 +179,7 @@ namespace DeepSpaceGalactic
                 {
                     if (now < state.DirectionLockedUntil)
                     {
-                        state.NextDirectionDecision = state.DirectionLockedUntil.AddMilliseconds(
-                            EnemyDirectionDecisionMilliseconds);
+                        state.NextDirectionDecision = state.DirectionLockedUntil.AddMilliseconds(EnemyDirectionDecisionMilliseconds);
                     }
                     else
                     {
@@ -170,9 +187,7 @@ namespace DeepSpaceGalactic
                         {
                             state.Direction *= -1;
                         }
-
-                        state.NextDirectionDecision = now.AddMilliseconds(
-                            EnemyDirectionDecisionMilliseconds);
+                        state.NextDirectionDecision = now.AddMilliseconds(EnemyDirectionDecisionMilliseconds);
                     }
                 }
 
@@ -182,9 +197,7 @@ namespace DeepSpaceGalactic
                 if (now >= combatState.NextShotTime)
                 {
                     CreateEnemyProjectile(enemy);
-
-                    combatState.NextShotTime =
-                        now.AddSeconds(enemy.FireRate);
+                    combatState.NextShotTime = now.AddSeconds(enemy.FireRate);
                 }
             }
 
@@ -193,7 +206,9 @@ namespace DeepSpaceGalactic
             SpawnAndMoveAsteroids(now);
             ProcessCollisions();
         }
+        #endregion
 
+        #region Collision and After collision damage/removal
         private void ProcessCollisions()
         {
             HashSet<Projectile> destroyedProjectiles = new HashSet<Projectile>();
@@ -273,16 +288,6 @@ namespace DeepSpaceGalactic
             }
             txtTest.Text = $"Health: {player.Health.ToString()} Lives: {player.Lives.ToString()}";
         }
-
-        private void RemoveDestroyedProjectiles(IEnumerable<Projectile> destroyedProjectiles)
-        {
-            foreach (Projectile projectile in destroyedProjectiles)
-            {
-                projectiles.Remove(projectile);
-                MainGrid.Children.Remove(projectile.Img);
-            }
-        }
-
         private void RemoveDestroyedAsteroids(IEnumerable<Asteroid> destroyedAsteroids)
         {
             foreach (Asteroid asteroid in destroyedAsteroids)
@@ -302,6 +307,9 @@ namespace DeepSpaceGalactic
                 MainGrid.Children.Remove(enemy.Img);
             }
         }
+        #endregion
+
+        #region Astriods 
 
         private void SpawnAndMoveAsteroids(DateTimeOffset now)
         {
@@ -395,6 +403,9 @@ namespace DeepSpaceGalactic
             nextAsteroidSpawnTime = now.AddSeconds(delay);
         }
 
+        #endregion
+
+        #region Projectiles
         private void CreatePlayerProjectile()
         {
             //checks if player is allowed to shoot. 
@@ -457,6 +468,19 @@ namespace DeepSpaceGalactic
             }
         }
 
+        private void RemoveDestroyedProjectiles(IEnumerable<Projectile> destroyedProjectiles)
+        {
+            foreach (Projectile projectile in destroyedProjectiles)
+            {
+                projectiles.Remove(projectile);
+                MainGrid.Children.Remove(projectile.Img);
+            }
+        }
+
+
+        #endregion
+
+        #region Enemy / Player movement
         private void MoveEnemyWithinGrid(Enemy enemy, EnemyMovementState state, DateTimeOffset now)
         {
             double maximumLeft = MainGrid.ActualWidth - enemy.Img.Width;
@@ -538,23 +562,6 @@ namespace DeepSpaceGalactic
 
             player.Move(newLeft - player.Position.Left, newTop - player.Position.Top);
         }
-        private static bool IsDirection(Windows.System.VirtualKey key)
-        {
-            return key == Windows.System.VirtualKey.Up
-                || key == Windows.System.VirtualKey.Down
-                || key == Windows.System.VirtualKey.Left
-                || key == Windows.System.VirtualKey.Right;
-        }
-
-        private void MainPage_Unloaded(object sender, RoutedEventArgs e)
-        {
-            movementTimer.Stop();
-            enemyMovementTimer.Stop();
-            Window.Current.CoreWindow.KeyDown -= CoreWindow_KeyDown;
-            Window.Current.CoreWindow.KeyUp -= CoreWindow_KeyUp;
-            Loaded -= MainPage_Loaded;
-        }
-
-
+        #endregion
     }
 }

@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media.Imaging;
-using Windows.Foundation;
 
 namespace DSG_Library
 {
@@ -37,38 +36,49 @@ namespace DSG_Library
 
             return new GamePiece(img);
         }
+
+        //where base collision is kept
         public static bool IsCollision(GamePiece piece1, GamePiece piece2)
         {
+            //null validation
             if (piece1 == null || piece2 == null || piece1.Img == null || piece2.Img == null)
             {
                 return false;
             }
-
+            //gets hight and width for both game pieces being checked
             double piece1Width = GetImageDimension(piece1.Img.Width, piece1.Img.ActualWidth);
+
             double piece1Height = GetImageDimension(piece1.Img.Height, piece1.Img.ActualHeight);
+
             double piece2Width = GetImageDimension(piece2.Img.Width, piece2.Img.ActualWidth);
+
             double piece2Height = GetImageDimension(piece2.Img.Height, piece2.Img.ActualHeight);
 
+            //validation that the pieces have proper sizes
             if (piece1Width <= 0 || piece1Height <= 0 || piece2Width <= 0 || piece2Height <= 0)
             {
                 return false;
             }
 
-            Rect piece1Bounds = new Rect(piece1.Position.Left, piece1.Position.Top, piece1Width, piece1Height);
-            Rect piece2Bounds = new Rect(piece2.Position.Left, piece2.Position.Top, piece2Width, piece2Height);
+            //gets the top bottom and side positions of each game piece to do the check
+            double piece1Left = piece1.Position.Left;
+            double piece1Right = piece1Left + piece1Width;
+            double piece1Top = piece1.Position.Top;
+            double piece1Bottom = piece1Top + piece1Height;
 
-          //  return piece1Bounds.IntersectsWith(piece2Bounds);
-            return piece1Bounds.Left < piece2Bounds.Right &&
-                piece1Bounds.Right > piece2Bounds.Left &&
-                piece1Bounds.Top < piece2Bounds.Bottom &&
-                piece1Bounds.Bottom > piece2Bounds.Top;
+            double piece2Left = piece2.Position.Left;
+            double piece2Right = piece2Left + piece2Width;
+            double piece2Top = piece2.Position.Top;
+            double piece2Bottom = piece2Top + piece2Height;
+
+            //if they lap horizontally and vertically then collision is detected and it returns true 
+            return piece1Left < piece2Right && piece1Right > piece2Left && piece1Top < piece2Bottom && piece1Bottom > piece2Top;
         }
 
+        //simply for nan checks if a piece isnt fully loaded in the xaml or not
         private static double GetImageDimension(double specifiedDimension, double actualDimension)
         {
-            return !double.IsNaN(specifiedDimension) && specifiedDimension > 0
-                ? specifiedDimension
-                : actualDimension;
+            return !double.IsNaN(specifiedDimension) && specifiedDimension > 0 ? specifiedDimension : actualDimension;
         }
 
     }

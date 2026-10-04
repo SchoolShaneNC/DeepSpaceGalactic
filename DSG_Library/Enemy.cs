@@ -17,27 +17,18 @@ namespace DSG_Library
         private double fireRate;
         private int size;
 
+      
         public int Health
         {
             get { return health; }
             set
             {
-                health = Math.Max(0, value);
+                if (value < 0)
+                    health = 0;
+                else
+                    health = value;
             }
         }
-
-
-        //public int Health
-        //{
-        //    get { return health; }
-        //    set
-        //    {
-        //        if (value > 0)
-        //            health = value;
-        //        else
-        //            health = 2;
-        //    }
-        //}
 
         public int PointValue
         {
