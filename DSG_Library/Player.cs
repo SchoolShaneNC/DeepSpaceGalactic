@@ -20,16 +20,24 @@ namespace DSG_Library
 
         public int Lives { get { return lives; } 
             set 
-            { 
-                lives = Math.Max(0, Math.Min(6, value));
+            {
+                if (value < 0 || value > 6)
+                    lives = 0;
+                else
+                    lives = value;
             } 
         }
 
-        public int Health { get { return health;  } 
-            set 
+        public int Health
+        {
+            get { return health; }
+            set
             {
-                health = Math.Max(0, Math.Min(200, value));
-            } 
+                if (value < 0 || value > 200)
+                    health = 0;
+                else
+                    health = value;
+            }
         }
 
         public double FireRate { get { return firerate; } 
@@ -73,35 +81,18 @@ namespace DSG_Library
             }
         }
 
-        //public int Lives
-        //{
-        //    get { return lives; }
-        //    set
-        //    {
-        //        if (value > 0 && value < 6)
-        //            lives = value;
-        //        else
-        //            lives = 3;
-        //    }
-        //}
-
-
-        //public int Health
-        //{
-        //    get { return health; }
-        //    set
-        //    {
-        //        if (value > 0 && value < 200)
-        //            health = value;
-        //        else
-        //            health = 100;
-        //    }
-        //}
-
-
-
         //out of nowhere it gave ambigius error for image so for time being just fully clarified what Image type
         public Player(Windows.UI.Xaml.Controls.Image img) : base(img)
+        {
+            Lives = 3;
+            Health = 100;
+            FireRate = 0.5; //seconds between shots
+            Speed = 9;
+            Score = 0;
+            Damage = 1;
+        }
+
+        public Player(Windows.UI.Xaml.Controls.Image img, int lives, int health, double firerate, double speed, int score, int damage) : base(img)
         {
             Lives = 3;
             Health = 100;
