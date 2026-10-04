@@ -14,6 +14,7 @@ namespace DSG_Library
 
         private int health;
         private int pointValue;
+        private int damage;
 
         public double VelocityX
         {
@@ -45,6 +46,18 @@ namespace DSG_Library
             }
         }
 
+        public int Damage
+        {
+            get { return damage; }
+            set
+            {
+                if (value > 0)
+                    damage = value;
+                else
+                    damage = 100;
+            }
+        }
+
         public int PointValue
         {
             get { return pointValue; }
@@ -61,7 +74,7 @@ namespace DSG_Library
         {
             VelocityX = 0;
             VelocityY = 0;
-
+            Damage = 100;
             Health = 1;
             PointValue = 10;
         }

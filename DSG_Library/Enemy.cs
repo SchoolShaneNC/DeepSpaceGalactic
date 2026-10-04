@@ -22,12 +22,22 @@ namespace DSG_Library
             get { return health; }
             set
             {
-                if (value > 0)
-                    health = value;
-                else
-                    health = 2;
+                health = Math.Max(0, value);
             }
         }
+
+
+        //public int Health
+        //{
+        //    get { return health; }
+        //    set
+        //    {
+        //        if (value > 0)
+        //            health = value;
+        //        else
+        //            health = 2;
+        //    }
+        //}
 
         public int PointValue
         {
