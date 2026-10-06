@@ -19,6 +19,7 @@ namespace DeepSpaceGalactic
         private const int MinimumAsteroidSize = 35;
         private const int MaximumAsteroidSize = 80;
         private int totalPlayerHealth;
+        private GameState gameState = GameState.Menu;
         private Player player;
         private List<Enemy> enemies;
         private List<Projectile> projectiles;
@@ -43,14 +44,15 @@ namespace DeepSpaceGalactic
         }
         private void MainPage_Unloaded(object sender, RoutedEventArgs e)
         {
-            Window.Current.CoreWindow.KeyDown -= CoreWindow_KeyDown;
-            Window.Current.CoreWindow.KeyUp -= CoreWindow_KeyUp;
+            StopGameLoop();
             Loaded -= MainPage_Loaded;
         }
 
 
         public void StartGame()
         {
+            ClearPlayingArea();
+            gameState = GameState.Playing;
 
             Window.Current.CoreWindow.KeyDown += CoreWindow_KeyDown;
             Window.Current.CoreWindow.KeyUp += CoreWindow_KeyUp;
@@ -103,7 +105,7 @@ namespace DeepSpaceGalactic
             foreach (Enemy enemy in enemies)
             {
                 enemyMovementStates.Add(enemy, new EnemyMovementState(now, EnemyDirectionDecisionMilliseconds));
-                enemyCombatStates.Add(enemy, new EnemyCombatState());
+                enemyCombatStates.Add(enemy, new EnemyCombatState(random.Next(1,3)));
 
             }
 
@@ -116,16 +118,41 @@ namespace DeepSpaceGalactic
         }
         private void GameOver()
         {
-            movementTimer.Stop();
-            enemyMovementTimer.Stop();
-            movementTimer.Stop();
-            enemyMovementTimer.Stop();
-            Window.Current.CoreWindow.KeyDown -= CoreWindow_KeyDown;
-            Window.Current.CoreWindow.KeyUp -= CoreWindow_KeyUp;
+            if (gameState != GameState.Playing)
+            {
+                return;
+            }
+
+            gameState = GameState.GameOver;
+            StopGameLoop();
             GameOverOverlayGrid.Visibility = Visibility.Visible;
             PlayingGrid.Visibility = Visibility.Collapsed;
+        }
 
+        private void ClearPlayingArea()
+        {
+            StopGameLoop();
+            heldDirections?.Clear();
 
+            // MainGrid only hosts runtime game objects, so clearing it removes every prior run's visual.
+            MainGrid.Children.Clear();
+            enemies?.Clear();
+            projectiles?.Clear();
+            asteroids?.Clear();
+            enemyMovementStates?.Clear();
+            enemyCombatStates?.Clear();
+
+            player = null;
+            HudGrid.DataContext = null;
+            nextPlayerShotTime = DateTimeOffset.MinValue;
+        }
+
+        private void StopGameLoop()
+        {
+            movementTimer?.Stop();
+            enemyMovementTimer?.Stop();
+            Window.Current.CoreWindow.KeyDown -= CoreWindow_KeyDown;
+            Window.Current.CoreWindow.KeyUp -= CoreWindow_KeyUp;
         }
 
         private Enemy CreateEnemy<T>(string imageName, int left, int top) where T : Enemy
@@ -185,11 +212,14 @@ namespace DeepSpaceGalactic
         #region Timer ticks
         private void MovementTimer_Tick(object sender, object e)
         {
-            MovePlayer();
+            if (gameState == GameState.Playing)
+            {
+                MovePlayer();
+            }
         }
         private void EnemyMovementTimer_Tick(object sender, object e)
         {
-            if (MainGrid.ActualWidth <= 0 || MainGrid.ActualHeight <= 0)
+            if (gameState != GameState.Playing || MainGrid.ActualWidth <= 0 || MainGrid.ActualHeight <= 0)
             {
                 return;
             }
@@ -339,6 +369,10 @@ namespace DeepSpaceGalactic
                 enemyMovementStates.Remove(enemy);
                 enemyCombatStates.Remove(enemy);
                 MainGrid.Children.Remove(enemy.Img);
+            }
+            if (enemies.Count == 0)
+            {
+                GameOver();
             }
         }
         #endregion
@@ -615,11 +649,15 @@ namespace DeepSpaceGalactic
             GameOverOverlayGrid.Visibility = Visibility.Collapsed;
             MainGrid.Visibility = Visibility.Visible;
             PlayingGrid.Visibility = Visibility.Visible;
+            StartGame();
         }
 
         private void MainMenuButton_Click(object sender, RoutedEventArgs e)
         {
+            ClearPlayingArea();
+            gameState = GameState.Menu;
             GameOverOverlayGrid.Visibility = Visibility.Collapsed;
+            PlayingGrid.Visibility = Visibility.Collapsed;
             MainMenuGrid.Visibility = Visibility.Visible;
         }
         #endregion
