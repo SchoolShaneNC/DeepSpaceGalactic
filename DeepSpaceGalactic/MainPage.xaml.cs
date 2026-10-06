@@ -17,6 +17,7 @@ namespace DeepSpaceGalactic
         private const int MaximumAsteroidsPerSpawn = 4;
         private const int MinimumAsteroidSize = 35;
         private const int MaximumAsteroidSize = 80;
+        private int totalPlayerHealth;
         private Player player;
         private List<Enemy> enemies;
         private List<Projectile> projectiles;
@@ -58,8 +59,9 @@ namespace DeepSpaceGalactic
             GamePiece playerPiece = GameLogic.CreatePiece("SpaceShips/PlayerShip1.png", 80, 400, 500);
             //sets shot timer to lowest value to start
             nextPlayerShotTime = DateTimeOffset.MinValue;
-
+            //instanciates player and assigns total health for damage reset
             player = new Player(playerPiece.Img);
+            totalPlayerHealth = player.Health;
 
             MainGrid.Children.Add(player.Img);
 
@@ -284,7 +286,13 @@ namespace DeepSpaceGalactic
 
             if (healthBeforeHit > 0 && player.Health == 0)
             {
-                player.Lives -= 1;
+                if (player.Lives - 1 == 0) ;
+                //here where end game code goes
+                else
+                {
+                    player.Lives -= 1;
+                    player.Health = totalPlayerHealth;
+                }
             }
             txtTest.Text = $"Health: {player.Health.ToString()} Lives: {player.Lives.ToString()}";
         }
