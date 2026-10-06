@@ -22,12 +22,12 @@ namespace DeepSpaceGalactic
         private List<Enemy> enemies;
         private List<Projectile> projectiles;
         private List<Asteroid> asteroids;
-        private readonly HashSet<Windows.System.VirtualKey> heldDirections;
-        private readonly DispatcherTimer movementTimer;
-        private readonly DispatcherTimer enemyMovementTimer;
-        private readonly Dictionary<Enemy, EnemyMovementState> enemyMovementStates;
-        private readonly Dictionary<Enemy, EnemyCombatState> enemyCombatStates;
-        private readonly Random random = new Random();
+        private  HashSet<Windows.System.VirtualKey> heldDirections;
+        private  DispatcherTimer movementTimer;
+        private  DispatcherTimer enemyMovementTimer;
+        private  Dictionary<Enemy, EnemyMovementState> enemyMovementStates;
+        private  Dictionary<Enemy, EnemyCombatState> enemyCombatStates;
+        private  Random random = new Random();
         private DateTimeOffset nextPlayerShotTime;
         private DateTimeOffset nextAsteroidSpawnTime;
 
@@ -35,10 +35,24 @@ namespace DeepSpaceGalactic
         {
             this.InitializeComponent();
 
+        }
+        private void MainPage_Loaded(object sender, RoutedEventArgs e)
+        {
+
+        }
+        private void MainPage_Unloaded(object sender, RoutedEventArgs e)
+        {
+            Window.Current.CoreWindow.KeyDown -= CoreWindow_KeyDown;
+            Window.Current.CoreWindow.KeyUp -= CoreWindow_KeyUp;
+            Loaded -= MainPage_Loaded;
+        }
+
+
+        public void StartGame()
+        {
+
             Window.Current.CoreWindow.KeyDown += CoreWindow_KeyDown;
             Window.Current.CoreWindow.KeyUp += CoreWindow_KeyUp;
-            Loaded += MainPage_Loaded;
-            Unloaded += MainPage_Unloaded;
 
             heldDirections = new HashSet<Windows.System.VirtualKey>();
             movementTimer = new DispatcherTimer
@@ -59,9 +73,11 @@ namespace DeepSpaceGalactic
             GamePiece playerPiece = GameLogic.CreatePiece("SpaceShips/PlayerShip1.png", 80, 400, 500);
             //sets shot timer to lowest value to start
             nextPlayerShotTime = DateTimeOffset.MinValue;
+
             //instanciates player and assigns total health for damage reset
             player = new Player(playerPiece.Img);
             totalPlayerHealth = player.Health;
+            HudGrid.DataContext = player;
 
             MainGrid.Children.Add(player.Img);
 
@@ -85,29 +101,33 @@ namespace DeepSpaceGalactic
             DateTimeOffset now = DateTimeOffset.UtcNow;
             foreach (Enemy enemy in enemies)
             {
-                enemyMovementStates.Add(enemy,new EnemyMovementState(now, EnemyDirectionDecisionMilliseconds));
+                enemyMovementStates.Add(enemy, new EnemyMovementState(now, EnemyDirectionDecisionMilliseconds));
                 enemyCombatStates.Add(enemy, new EnemyCombatState());
-            
+
             }
 
-           // txtTest.Text = $"{player.Health}, {player.Speed}, {player.Damage}, {player.FireRate}";
+            StartTimers();
         }
-
-       // private void StartGame();
-        private void MainPage_Loaded(object sender, RoutedEventArgs e)
+        private void StartTimers()
         {
             ScheduleNextAsteroidSpawn(DateTimeOffset.UtcNow);
-            enemyMovementTimer.Start();
-
+            enemyMovementTimer.Start(); //projectiles use the sane timer so this allows projectile movement too
         }
-        private void MainPage_Unloaded(object sender, RoutedEventArgs e)
+        private void GameOver()
         {
+            movementTimer.Stop();
+            enemyMovementTimer.Stop();
             movementTimer.Stop();
             enemyMovementTimer.Stop();
             Window.Current.CoreWindow.KeyDown -= CoreWindow_KeyDown;
             Window.Current.CoreWindow.KeyUp -= CoreWindow_KeyUp;
-            Loaded -= MainPage_Loaded;
+            GameOverOverlayGrid.Visibility = Visibility.Visible;
+            PlayingGrid.Visibility = Visibility.Collapsed;
+
+
+
         }
+
         private Enemy CreateEnemy<T>(string imageName, int left, int top) where T : Enemy
         {
             GamePiece piece = GameLogic.CreatePiece(imageName, left, top);
@@ -288,7 +308,8 @@ namespace DeepSpaceGalactic
 
             if (healthBeforeHit > 0 && player.Health == 0)
             {
-                if (player.Lives - 1 == 0) ;
+                if (player.Lives - 1 == 0)
+                    GameOver();
                 //here where end game code goes
                 else
                 {
@@ -301,6 +322,7 @@ namespace DeepSpaceGalactic
         {
             foreach (Asteroid asteroid in destroyedAsteroids)
             {
+                //player.Score += asteroid.PointValue;
                 asteroids.Remove(asteroid);
                 MainGrid.Children.Remove(asteroid.Img);
             }
@@ -573,14 +595,23 @@ namespace DeepSpaceGalactic
         }
         #endregion
 
+
+        #region UI Button Clicks
         private void StartGameButton_Click(object sender, RoutedEventArgs e)
         {
-
+            MainMenuGrid.Visibility = Visibility.Collapsed;
+            GameOverOverlayGrid.Visibility = Visibility.Collapsed;
+            MainGrid.Visibility = Visibility.Visible;
+            PlayingGrid.Visibility = Visibility.Visible;
+            StartGame();
         }
 
         private void PlayAgainButton_Click(object sender, RoutedEventArgs e)
         {
-
+            MainMenuGrid.Visibility = Visibility.Collapsed;
+            GameOverOverlayGrid.Visibility = Visibility.Collapsed;
+            MainGrid.Visibility = Visibility.Visible;
+            PlayingGrid.Visibility = Visibility.Visible;
         }
 
         private void MainMenuButton_Click(object sender, RoutedEventArgs e)
@@ -588,5 +619,6 @@ namespace DeepSpaceGalactic
             GameOverOverlayGrid.Visibility = Visibility.Collapsed;
             MainMenuGrid.Visibility = Visibility.Visible;
         }
+        #endregion
     }
 }
