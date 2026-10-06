@@ -132,6 +132,8 @@
   <ItemGroup>
     <Content Include="Assets\Astriods\Astriod1.png" />
     <Content Include="Assets\Astriods\Astriod2.png" />
+    <Content Include="Assets\Backgrounds\DeepRockGalactic.png" />
+    <Content Include="Assets\Backgrounds\SpaceBackground.jpg" />
     <Content Include="Assets\LazerBeams\BlueLazerBeam.png" />
     <Content Include="Assets\LazerBeams\RedLazerBeam.png" />
     <Content Include="Assets\SpaceShips\EnemyShip1.png" />

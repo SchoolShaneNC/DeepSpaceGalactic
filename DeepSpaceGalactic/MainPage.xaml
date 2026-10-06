@@ -9,8 +9,58 @@
     Background="Black">
 
 
-    <Grid x:Name="MainGrid">
-        <TextBlock x:Name="txtTest" HorizontalAlignment="Left" Height="161"  TextWrapping="Wrap" Text="Textblockffff" VerticalAlignment="Top" Width="431" FontSize="40" RequestedTheme="Dark" FocusVisualPrimaryBrush="Black" FocusVisualSecondaryBrush="#99000000"/>
+    <Grid x:Name="RootGrid">
+        <!-- Playing state: the existing game area remains available to MainPage.cs. -->
+        <Grid x:Name="PlayingGrid">
+            <Grid.Background>
+                <ImageBrush ImageSource="ms-appx:///Assets/Backgrounds/SpaceBackground.jpg" Stretch="UniformToFill" />
+            </Grid.Background>
 
+            <Grid x:Name="MainGrid">
+                <TextBlock x:Name="txtTest" HorizontalAlignment="Left" Height="161" TextWrapping="Wrap" Text="Textblockffff" VerticalAlignment="Top" Width="431" FontSize="40" RequestedTheme="Dark" FocusVisualPrimaryBrush="Black" FocusVisualSecondaryBrush="#99000000" />
+                <TextBlock x:Name="txtTest_Copy" HorizontalAlignment="Left" Height="161" TextWrapping="Wrap" Text="Textblockffff" VerticalAlignment="Top" Width="431" FontSize="40" RequestedTheme="Dark" FocusVisualPrimaryBrush="Black" FocusVisualSecondaryBrush="#99000000" Margin="480,826,0,0" />
+            </Grid>
+
+            <Grid x:Name="HudGrid" VerticalAlignment="Top" Background="#99000000" MinHeight="56">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <TextBlock x:Name="ScoreTextBlock" Grid.Column="0" Text="Score: 0" Foreground="White" FontSize="22" Margin="24,0,0,0" VerticalAlignment="Center" />
+                <TextBlock x:Name="HealthTextBlock" Grid.Column="1" Text="Health: 100" Foreground="White" FontSize="22" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                <TextBlock x:Name="LivesTextBlock" Grid.Column="2" Text="Lives: 3" Foreground="White" FontSize="22" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                <TextBlock x:Name="LevelTextBlock" Grid.Column="3" Text="Level: 1" Foreground="White" FontSize="22" Margin="0,0,24,0" HorizontalAlignment="Right" VerticalAlignment="Center" />
+            </Grid>
+        </Grid>
+
+        <!-- Main menu is a layer so its visibility can be controlled without navigation. -->
+        <Grid x:Name="MainMenuGrid">
+            <Grid.Background>
+                <ImageBrush ImageSource="ms-appx:///Assets/Backgrounds/SpaceBackground.jpg" Stretch="UniformToFill" />
+            </Grid.Background>
+
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="36">
+                <Image Source="Assets/Backgrounds/DeepRockGalactic.png" MaxWidth="700" Stretch="Uniform" HorizontalAlignment="Center"/>
+                <Button x:Name="StartGameButton" Content="START GAME" Width="320" Height="86" FontSize="30" HorizontalAlignment="Center" Background="#33FFFFFF" />
+            </StackPanel>
+        </Grid>
+
+        <!-- Game objects remain in PlayingGrid underneath this overlay. -->
+        <Grid x:Name="GameOverOverlayGrid" Visibility="Collapsed" Background="#88000000">
+            <Border Width="460" Height="340" HorizontalAlignment="Center" VerticalAlignment="Center" BorderBrush="White" BorderThickness="2" Padding="36">
+                <Border.Background>
+                    <ImageBrush ImageSource="ms-appx:///Assets/Backgrounds/SpaceBackground.jpg" Stretch="UniformToFill" />
+                </Border.Background>
+
+                <StackPanel VerticalAlignment="Center" Spacing="22">
+                    <TextBlock Text="GAME OVER" Foreground="White" FontSize="50" FontWeight="SemiBold" HorizontalAlignment="Center" />
+                    <Button x:Name="PlayAgainButton" Content="PLAY AGAIN" Height="60" FontSize="24" />
+                    <Button x:Name="MainMenuButton" Content="MAIN MENU" Height="60" FontSize="24" />
+                </StackPanel>
+            </Border>
+        </Grid>
     </Grid>
 </Page>
