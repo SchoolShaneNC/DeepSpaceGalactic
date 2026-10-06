@@ -92,6 +92,8 @@ namespace DeepSpaceGalactic
 
            // txtTest.Text = $"{player.Health}, {player.Speed}, {player.Damage}, {player.FireRate}";
         }
+
+       // private void StartGame();
         private void MainPage_Loaded(object sender, RoutedEventArgs e)
         {
             ScheduleNextAsteroidSpawn(DateTimeOffset.UtcNow);
@@ -294,7 +296,6 @@ namespace DeepSpaceGalactic
                     player.Health = totalPlayerHealth;
                 }
             }
-            txtTest.Text = $"Health: {player.Health.ToString()} Lives: {player.Lives.ToString()}";
         }
         private void RemoveDestroyedAsteroids(IEnumerable<Asteroid> destroyedAsteroids)
         {
@@ -571,5 +572,21 @@ namespace DeepSpaceGalactic
             player.Move(newLeft - player.Position.Left, newTop - player.Position.Top);
         }
         #endregion
+
+        private void StartGameButton_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void PlayAgainButton_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void MainMenuButton_Click(object sender, RoutedEventArgs e)
+        {
+            GameOverOverlayGrid.Visibility = Visibility.Collapsed;
+            MainMenuGrid.Visibility = Visibility.Visible;
+        }
     }
 }

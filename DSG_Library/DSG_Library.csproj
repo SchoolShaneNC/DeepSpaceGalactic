@@ -126,6 +126,7 @@
     <Compile Include="EnemyMovementState.cs" />
     <Compile Include="GameLogic.cs" />
     <Compile Include="GamePiece.cs" />
+    <Compile Include="GameState.cs" />
     <Compile Include="LargeEnemy.cs" />
     <Compile Include="MediumEnemy.cs" />
     <Compile Include="Player.cs" />
