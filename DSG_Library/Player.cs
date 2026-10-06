@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -8,7 +9,7 @@ using static System.Net.Mime.MediaTypeNames;
 
 namespace DSG_Library
 {
-    public class Player : GamePiece
+    public class Player : GamePiece, INotifyPropertyChanged
     {
 
         private int lives;
@@ -18,14 +19,20 @@ namespace DSG_Library
         private int score;
         private int damage;
 
-        public int Lives { get { return lives; } 
-            set 
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        public int Lives
+        {
+            get { return lives; }
+            set
             {
                 if (value < 0 || value > 6)
                     lives = 0;
                 else
                     lives = value;
-            } 
+
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Lives)));
+            }
         }
 
         public int Health
@@ -37,35 +44,50 @@ namespace DSG_Library
                     health = 0;
                 else
                     health = value;
+
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Health)));
             }
         }
 
-        public double FireRate { get { return firerate; } 
-            set 
-            { 
+        public double FireRate
+        {
+            get { return firerate; }
+            set
+            {
                 if (value > 0.2 && value < 5)
                     firerate = value;
                 else
                     firerate = 0.5;
-            } 
+
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(FireRate)));
+            }
         }
 
-        public double Speed { get { return speed; } 
-            set 
+        public double Speed
+        {
+            get { return speed; }
+            set
             {
                 if (value > 0 && value < 20)
                     speed = value;
                 else
                     speed = 9;
-            } 
+
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Speed)));
+            }
         }
-        public int Score { get { return score; }
+
+        public int Score
+        {
+            get { return score; }
             set
             {
                 if (value >= 0)
                     score = value;
                 else
                     score = 0;
+
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Score)));
             }
         }
 
@@ -78,6 +100,8 @@ namespace DSG_Library
                     damage = value;
                 else
                     damage = 1;
+
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Damage)));
             }
         }
 
@@ -103,3 +127,5 @@ namespace DSG_Library
         }
     }
 }
+
+
