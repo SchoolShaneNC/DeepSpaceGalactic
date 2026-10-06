@@ -10,9 +10,9 @@ namespace DSG_Library
     {
         public DateTimeOffset NextShotTime { get; set; }
 
-        public EnemyCombatState()
+        public EnemyCombatState(double seconds)
         {
-            NextShotTime = DateTimeOffset.UtcNow;
+            NextShotTime = DateTimeOffset.UtcNow.AddSeconds(seconds);
         }
     }
 }
