@@ -4,6 +4,7 @@ using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Input;
 using DSG_Library;
+using System.Linq;
 
 namespace DeepSpaceGalactic
 {
@@ -125,7 +126,6 @@ namespace DeepSpaceGalactic
             PlayingGrid.Visibility = Visibility.Collapsed;
 
 
-
         }
 
         private Enemy CreateEnemy<T>(string imageName, int left, int top) where T : Enemy
@@ -237,6 +237,7 @@ namespace DeepSpaceGalactic
         {
             HashSet<Projectile> destroyedProjectiles = new HashSet<Projectile>();
             HashSet<Asteroid> destroyedAsteroids = new HashSet<Asteroid>();
+            HashSet<Asteroid> destroyedAsteroidsPlayer = new HashSet<Asteroid>();
             HashSet<Enemy> destroyedEnemies = new HashSet<Enemy>();
 
             foreach (Projectile projectile in projectiles)
@@ -281,6 +282,9 @@ namespace DeepSpaceGalactic
                         continue;
                     }
 
+                    if (projectile.IsPlayerProjectile)
+                        player.Score += asteroid.PointValue;
+
                     destroyedProjectiles.Add(projectile);
                     destroyedAsteroids.Add(asteroid);
                     break;
@@ -322,7 +326,6 @@ namespace DeepSpaceGalactic
         {
             foreach (Asteroid asteroid in destroyedAsteroids)
             {
-                //player.Score += asteroid.PointValue;
                 asteroids.Remove(asteroid);
                 MainGrid.Children.Remove(asteroid.Img);
             }
