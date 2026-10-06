@@ -17,8 +17,6 @@
             </Grid.Background>
 
             <Grid x:Name="MainGrid">
-                <TextBlock x:Name="txtTest" HorizontalAlignment="Left" Height="161" TextWrapping="Wrap" Text="Textblockffff" VerticalAlignment="Top" Width="431" FontSize="40" RequestedTheme="Dark" FocusVisualPrimaryBrush="Black" FocusVisualSecondaryBrush="#99000000" />
-                <TextBlock x:Name="txtTest_Copy" HorizontalAlignment="Left" Height="161" TextWrapping="Wrap" Text="Textblockffff" VerticalAlignment="Top" Width="431" FontSize="40" RequestedTheme="Dark" FocusVisualPrimaryBrush="Black" FocusVisualSecondaryBrush="#99000000" Margin="480,826,0,0" />
             </Grid>
 
             <Grid x:Name="HudGrid" VerticalAlignment="Top" Background="#99000000" MinHeight="56">
@@ -44,7 +42,7 @@
 
             <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="36">
                 <Image Source="Assets/Backgrounds/DeepRockGalactic.png" MaxWidth="700" Stretch="Uniform" HorizontalAlignment="Center"/>
-                <Button x:Name="StartGameButton" Content="START GAME" Width="320" Height="86" FontSize="30" HorizontalAlignment="Center" Background="#33FFFFFF" />
+                <Button x:Name="StartGameButton" Content="START GAME" Width="320" Height="86" FontSize="30" HorizontalAlignment="Center" Background="#33FFFFFF" Click="StartGameButton_Click" />
             </StackPanel>
         </Grid>
 
@@ -57,8 +55,8 @@
 
                 <StackPanel VerticalAlignment="Center" Spacing="22">
                     <TextBlock Text="GAME OVER" Foreground="White" FontSize="50" FontWeight="SemiBold" HorizontalAlignment="Center" />
-                    <Button x:Name="PlayAgainButton" Content="PLAY AGAIN" Height="60" FontSize="24" />
-                    <Button x:Name="MainMenuButton" Content="MAIN MENU" Height="60" FontSize="24" />
+                    <Button x:Name="PlayAgainButton" Content="PLAY AGAIN" Height="60" FontSize="24" Click="PlayAgainButton_Click" />
+                    <Button x:Name="MainMenuButton" Content="MAIN MENU" Height="60" FontSize="24" Click="MainMenuButton_Click" />
                 </StackPanel>
             </Border>
         </Grid>
