@@ -74,7 +74,7 @@
                 </Border.Background>
 
                 <StackPanel VerticalAlignment="Center" Spacing="22">
-                    <TextBlock Text="GAME OVER" Foreground="White" FontSize="50" FontWeight="SemiBold" HorizontalAlignment="Center" />
+                    <TextBlock x:Name="EndGameTitleTextBlock" Text="GAME OVER" Foreground="White" FontSize="50" FontWeight="SemiBold" HorizontalAlignment="Center" />
                     <Button x:Name="PlayAgainButton" Content="PLAY AGAIN" Height="60" FontSize="24" Click="PlayAgainButton_Click" />
                     <Button x:Name="MainMenuButton" Content="MAIN MENU" Height="60" FontSize="24" Click="MainMenuButton_Click" />
                 </StackPanel>

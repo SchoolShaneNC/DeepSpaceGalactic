@@ -18,7 +18,21 @@ namespace DeepSpaceGalactic
         private const int MaximumAsteroidsPerSpawn = 4;
         private const int MinimumAsteroidSize = 35;
         private const int MaximumAsteroidSize = 80;
+        private const int FirstLevel = 1;
+        private const int MaximumLevel = 6;
+        private const int BaseSmallEnemyCount = 1;
+        private const int BaseMediumEnemyCount = 1;
+        private const int BaseLargeEnemyCount = 1;
+        private const int AdditionalEnemiesPerIncrease = 1;
+        private const int AdditionalHealthPerStatIncrease = 1;
+        private const double FireRateReductionPerStatIncrease = 0.08;
+        private const double MinimumEnemyFireRateSeconds = 0.35;
+        private const int LargeEnemyRowY = 60;
+        private const int MediumEnemyRowY = 120;
+        private const int SmallEnemyRowY = 180;
+        private const double DefaultEnemyLayoutWidth = 1000;
         private int totalPlayerHealth;
+        private int currentLevel;
         private GameState gameState = GameState.Menu;
         private Player player;
         private List<Enemy> enemies;
@@ -49,14 +63,20 @@ namespace DeepSpaceGalactic
         }
 
 
+        #region Game Loops 
+        //main function to start game / subscribing methods and instanciating player and enemies
         public void StartGame()
         {
+            //removes any leftover images
             ClearPlayingArea();
             gameState = GameState.Playing;
+            currentLevel = FirstLevel;
 
+            //adds keyboard inputs , if done in mainpage constructor it can throw error as the window is not yet created
             Window.Current.CoreWindow.KeyDown += CoreWindow_KeyDown;
             Window.Current.CoreWindow.KeyUp += CoreWindow_KeyUp;
 
+            //dispatcher timer to move player based on held keys, 16ms is about 60fps
             heldDirections = new HashSet<Windows.System.VirtualKey>();
             movementTimer = new DispatcherTimer
             {
@@ -64,6 +84,8 @@ namespace DeepSpaceGalactic
             };
             movementTimer.Tick += MovementTimer_Tick;
 
+            //stores the movement and combat states of each enemy, so each enemy can have its own movement and combat behavior
+            //mainly to stop all enemies from shooting at same time or switching directions at same time
             enemyMovementStates = new Dictionary<Enemy, EnemyMovementState>();
             enemyCombatStates = new Dictionary<Enemy, EnemyCombatState>();
             enemyMovementTimer = new DispatcherTimer
@@ -72,42 +94,25 @@ namespace DeepSpaceGalactic
             };
             enemyMovementTimer.Tick += EnemyMovementTimer_Tick;
 
-            // Create the player
+            //create the player
             GamePiece playerPiece = GameLogic.CreatePiece("SpaceShips/PlayerShip1.png", 80, 400, 500);
             //sets shot timer to lowest value to start
             nextPlayerShotTime = DateTimeOffset.MinValue;
 
-            //instanciates player and assigns total health for damage reset
+            //instanciates player and assigns total health for damage reset when player loses a life
             player = new Player(playerPiece.Img);
             totalPlayerHealth = player.Health;
+            //the player is the data context for the hud grid so that the hud can bind to the player properties
             HudGrid.DataContext = player;
 
             MainGrid.Children.Add(player.Img);
 
-            // Create the enemy collection
+            //create the enemy collection
             enemies = new List<Enemy>();
             projectiles = new List<Projectile>();
             asteroids = new List<Asteroid>();
 
-            // Create enemies
-            Enemy smallEnemy = CreateEnemy<SmallEnemy>("SpaceShips/EnemyShip1.png", 100, 100);
-
-            Enemy regularEnemy = CreateEnemy<MediumEnemy>("SpaceShips/EnemyShip1.png", 300, 100);
-
-            Enemy largeEnemy = CreateEnemy<LargeEnemy>("SpaceShips/EnemyShip2.png", 500, 100);
-
-            // Add enemies to the List
-            enemies.Add(smallEnemy);
-            enemies.Add(regularEnemy);
-            enemies.Add(largeEnemy);
-
-            DateTimeOffset now = DateTimeOffset.UtcNow;
-            foreach (Enemy enemy in enemies)
-            {
-                enemyMovementStates.Add(enemy, new EnemyMovementState(now, EnemyDirectionDecisionMilliseconds));
-                enemyCombatStates.Add(enemy, new EnemyCombatState(random.Next(1,3)));
-
-            }
+            StartLevel();
 
             StartTimers();
         }
@@ -118,15 +123,133 @@ namespace DeepSpaceGalactic
         }
         private void GameOver()
         {
+            EndGame(GameState.GameOver, "GAME OVER");
+        }
+
+        private void PlayerWins()
+        {
+            EndGame(GameState.Won, "YOU WIN!");
+        }
+
+        private void EndGame(GameState endState, string title)
+        {
             if (gameState != GameState.Playing)
             {
                 return;
             }
 
-            gameState = GameState.GameOver;
+            gameState = endState;
             StopGameLoop();
+            EndGameTitleTextBlock.Text = title;
             GameOverOverlayGrid.Visibility = Visibility.Visible;
-            PlayingGrid.Visibility = Visibility.Collapsed;
+            PlayingGrid.Visibility = Visibility.Visible;
+            MainGrid.Visibility = Visibility.Visible;
+        }
+
+        private void StartLevel()
+        {
+            //gets rid of the enemies and projectiles from the previous level if any happen to get through
+            ClearLevelEnemies();
+            ClearProjectiles();
+
+            //resets olayer stats to start fresh
+            player.Health = totalPlayerHealth;
+            player.Lives = 3;
+
+            LevelTextBlock.Text = $"Level: {currentLevel}";
+
+            //every two levels one enemy of each kind gets added , adding more each level stacks up way too fast
+            int enemyIncreaseStage = (currentLevel - FirstLevel) / 2;
+
+            int smallEnemyCount = BaseSmallEnemyCount + enemyIncreaseStage * AdditionalEnemiesPerIncrease;
+            int mediumEnemyCount = BaseMediumEnemyCount + enemyIncreaseStage * AdditionalEnemiesPerIncrease;
+            int largeEnemyCount = BaseLargeEnemyCount + enemyIncreaseStage * AdditionalEnemiesPerIncrease;
+
+            //large enemies are at the top
+            CreateEnemyRow<LargeEnemy>("SpaceShips/EnemyShip2.png", largeEnemyCount, LargeEnemyRowY);
+
+            //medium enemies are in the middle
+            CreateEnemyRow<MediumEnemy>("SpaceShips/EnemyShip1.png", mediumEnemyCount, MediumEnemyRowY);
+
+            //small enemies are at the bottom
+            CreateEnemyRow<SmallEnemy>("SpaceShips/EnemyShip1.png", smallEnemyCount, SmallEnemyRowY);
+
+            DateTimeOffset now = DateTimeOffset.UtcNow;
+
+            foreach (Enemy enemy in enemies)
+            {
+                //every 1.7 seconds the enemy decidea if it changes direction or not. direction is locked for 2.7 seconds after collision with another enemy or edge of the screen
+                enemyMovementStates.Add(enemy, new EnemyMovementState(now, EnemyDirectionDecisionMilliseconds));
+                //the first shot time is randomized so not all enemies shoot at the same time. after first shot it shoots based off firerate
+                enemyCombatStates.Add(enemy, new EnemyCombatState(random.Next(1, 3)));
+            }
+        }
+
+        private void CreateEnemyRow<T>(string imageName, int enemyCount, int top) where T : Enemy
+        {
+            //any enemy derrived class uses this to space out enemies evenly 
+            double layoutWidth = MainGrid.ActualWidth > 0 ? MainGrid.ActualWidth : DefaultEnemyLayoutWidth;
+
+            for (int index = 0; index < enemyCount; index++)
+            {
+                int left = (int)(layoutWidth * (index + 1) / (enemyCount + 1));
+                Enemy enemy = CreateEnemy<T>(imageName, left, top);
+
+                //center the enemy on the calculated position
+                enemy.Move(-enemy.Img.Width / 2, 0);
+
+                ApplyLevelScaling(enemy);
+                enemies.Add(enemy);
+            }
+        }
+
+        private void ApplyLevelScaling(Enemy enemy)
+        {
+            //stats increase on Levels 2, 4, and 6 same reason as enemy count increase, gets too much fast
+            int statIncreaseStage = currentLevel / 2;
+
+            enemy.Health += statIncreaseStage * AdditionalHealthPerStatIncrease;
+
+            //reduces the fire rate of enemy by set amount each stat increase
+            //minimum fire rate is a safety net so it doesnt get too fast/negative
+            enemy.FireRate = Math.Max(MinimumEnemyFireRateSeconds, enemy.FireRate - statIncreaseStage * FireRateReductionPerStatIncrease);
+        }
+
+        private void ClearLevelEnemies()
+        {
+            //method that clears the enemies
+            foreach (Enemy enemy in enemies)
+            {
+                MainGrid.Children.Remove(enemy.Img);
+            }
+
+            enemies.Clear();
+            enemyMovementStates.Clear();
+            enemyCombatStates.Clear();
+        }
+
+        private void ClearProjectiles()
+        {
+            //method that clears projectiles
+            foreach (Projectile projectile in projectiles)
+            {
+                MainGrid.Children.Remove(projectile.Img);
+            }
+
+            projectiles.Clear();
+        }
+
+        private void AdvanceLevel()
+        {
+            //advances if under max level, if not you have won
+            if (currentLevel >= MaximumLevel)
+            {
+                PlayerWins();
+                return;
+            }
+
+            currentLevel++;
+            StartLevel();
         }
 
         private void ClearPlayingArea()
@@ -134,7 +257,7 @@ namespace DeepSpaceGalactic
             StopGameLoop();
             heldDirections?.Clear();
 
-            // MainGrid only hosts runtime game objects, so clearing it removes every prior run's visual.
+            //removes everything from maingrid and lists/dictionaries to reset
             MainGrid.Children.Clear();
             enemies?.Clear();
             projectiles?.Clear();
@@ -149,11 +272,14 @@ namespace DeepSpaceGalactic
 
         private void StopGameLoop()
         {
+            //stops timers and removes keyboard input 
             movementTimer?.Stop();
             enemyMovementTimer?.Stop();
             Window.Current.CoreWindow.KeyDown -= CoreWindow_KeyDown;
             Window.Current.CoreWindow.KeyUp -= CoreWindow_KeyUp;
         }
+        #endregion
+
 
         private Enemy CreateEnemy<T>(string imageName, int left, int top) where T : Enemy
         {
@@ -372,7 +498,7 @@ namespace DeepSpaceGalactic
             }
             if (enemies.Count == 0)
             {
-                GameOver();
+                AdvanceLevel();
             }
         }
         #endregion
