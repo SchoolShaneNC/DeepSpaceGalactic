@@ -11,10 +11,10 @@ namespace DSG_Library
     {
         public LargeEnemy(Image img) : base(img)
         {
-            Health = 5;
+            Health = 3;
             PointValue = 300;
             Speed = 2.3;
-            Size = 120;
+            Size = 60;
             Damage = 50;
             FireRate = 3.0; //seconds between shots
         }
