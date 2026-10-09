@@ -10,13 +10,14 @@ namespace DeepSpaceGalactic
 {
     public sealed partial class MainPage : Page
     {
+        //constants for game settings
         private const int EnemyDirectionDecisionMilliseconds = 1700;
         private const int EnemyCollisionDirectionLockMilliseconds = 2700;
         private const double MinimumAsteroidSpawnSeconds = 0.7;
         private const double MaximumAsteroidSpawnSeconds = 2.0;
         private const int MinimumAsteroidsPerSpawn = 1;
         private const int MaximumAsteroidsPerSpawn = 4;
-        private const int MinimumAsteroidSize = 35;
+        private const int MinimumAsteroidSize = 40;
         private const int MaximumAsteroidSize = 80;
         private const int FirstLevel = 1;
         private const int MaximumLevel = 6;
@@ -25,12 +26,15 @@ namespace DeepSpaceGalactic
         private const int BaseLargeEnemyCount = 1;
         private const int AdditionalEnemiesPerIncrease = 1;
         private const int AdditionalHealthPerStatIncrease = 1;
+        private const int AdditionalDamagePerStatIncrease = 15;
         private const double FireRateReductionPerStatIncrease = 0.08;
         private const double MinimumEnemyFireRateSeconds = 0.35;
+        //consts where the enemy rows are
         private const int LargeEnemyRowY = 60;
         private const int MediumEnemyRowY = 120;
         private const int SmallEnemyRowY = 180;
         private const double DefaultEnemyLayoutWidth = 1000;
+        //variables for game state / objects / collections / dispatcher timers 
         private int totalPlayerHealth;
         private int currentLevel;
         private GameState gameState = GameState.Menu;
@@ -118,7 +122,7 @@ namespace DeepSpaceGalactic
         }
         private void StartTimers()
         {
-            ScheduleNextAsteroidSpawn(DateTimeOffset.UtcNow);
+            ScheduleNextAsteroidSpawn(DateTimeOffset.UtcNow); //schedules the first asteroid spawn time
             enemyMovementTimer.Start(); //projectiles use the sane timer so this allows projectile movement too
         }
         private void GameOver()
@@ -137,7 +141,7 @@ namespace DeepSpaceGalactic
             {
                 return;
             }
-
+            //gets the current game state stops game loop then shows the game over overlay with the title of either game over or you win
             gameState = endState;
             StopGameLoop();
             EndGameTitleTextBlock.Text = title;
@@ -159,6 +163,7 @@ namespace DeepSpaceGalactic
             LevelTextBlock.Text = $"Level: {currentLevel}";
 
             //every two levels one enemy of each kind gets added , adding more each level stacks up way too fast
+            //its using integer division so .5s get discarded making it only increase happens on levels 2, 4, and 6
             int enemyIncreaseStage = (currentLevel - FirstLevel) / 2;
 
             int smallEnemyCount = BaseSmallEnemyCount + enemyIncreaseStage * AdditionalEnemiesPerIncrease;
@@ -208,7 +213,10 @@ namespace DeepSpaceGalactic
             //stats increase on Levels 2, 4, and 6 same reason as enemy count increase, gets too much fast
             int statIncreaseStage = currentLevel / 2;
 
+            //health goes up by 1 (which is the const) and damage goes up by 15 (which is the const)
             enemy.Health += statIncreaseStage * AdditionalHealthPerStatIncrease;
+            enemy.Damage += (int)(statIncreaseStage * AdditionalDamagePerStatIncrease);
+
 
             //reduces the fire rate of enemy by set amount each stat increase
             //minimum fire rate is a safety net so it doesnt get too fast/negative
@@ -283,9 +291,13 @@ namespace DeepSpaceGalactic
 
         private Enemy CreateEnemy<T>(string imageName, int left, int top) where T : Enemy
         {
+            //enemy creation <T> allows for all derrived enemy class creation
             GamePiece piece = GameLogic.CreatePiece(imageName, left, top);
 
+            //Activator.CreateInstance creates instance of enemy class based on type T
+            //allows creation of different types of enemies (SmallEnemy, MediumEnemy, LargeEnemy) without having to write separate code for each type
             Enemy enemy = (Enemy)Activator.CreateInstance(typeof(T), piece.Img);
+            //uses enemies size property
             enemy.Img.Width = enemy.Size;
             enemy.Img.Height = enemy.Size;
 
@@ -297,22 +309,24 @@ namespace DeepSpaceGalactic
         #region Keybaord input
         private void CoreWindow_KeyDown(object sender, Windows.UI.Core.KeyEventArgs e)
         {
+            //if the space key is pressed create a player projectile
             if (e.VirtualKey == Windows.System.VirtualKey.Space)
             {
                 CreatePlayerProjectile();
 
                 return;
             }
-
+            //moves player based on direction key and adds it to the heldDirections hashset 
             if (IsDirection(e.VirtualKey) && heldDirections.Add(e.VirtualKey))
             {
-                MovePlayer(); // Move once immediately instead of waiting for the first timer tick.
+                MovePlayer(); //move once immediately instead of waiting for the first timer tick
                 movementTimer.Start();
             }
         }
 
         private void CoreWindow_KeyUp(object sender, Windows.UI.Core.KeyEventArgs e)
         {
+            //stop movement on key release and remove it from the heldDirections hashset
             if (IsDirection(e.VirtualKey))
             {
                 heldDirections.Remove(e.VirtualKey);
@@ -326,6 +340,7 @@ namespace DeepSpaceGalactic
 
         private static bool IsDirection(Windows.System.VirtualKey key)
         {
+            //returns what direction you clciked 
             return key == Windows.System.VirtualKey.Up
                 || key == Windows.System.VirtualKey.Down
                 || key == Windows.System.VirtualKey.Left
@@ -338,6 +353,7 @@ namespace DeepSpaceGalactic
         #region Timer ticks
         private void MovementTimer_Tick(object sender, object e)
         {
+            //if games going move player on timer tick
             if (gameState == GameState.Playing)
             {
                 MovePlayer();
@@ -354,25 +370,29 @@ namespace DeepSpaceGalactic
 
             foreach (Enemy enemy in enemies)
             {
+                //loops through each enemy and checks if its time to change direction or shoot based on the enemy's movement and combat state
                 EnemyMovementState state = enemyMovementStates[enemy];
                 if (now >= state.NextDirectionDecision)
                 {
                     if (now < state.DirectionLockedUntil)
                     {
+                        //if enemy is still in the direction lock period after a collision, it will not change direction and will set the next decision time to be after the lock period
                         state.NextDirectionDecision = state.DirectionLockedUntil.AddMilliseconds(EnemyDirectionDecisionMilliseconds);
                     }
                     else
                     {
-                        if (random.Next(4) == 0)
+                        //randomly decides if enemy should change direction or not, 1 in 3 chance to change direction
+                        if (random.Next(3) == 0)
                         {
                             state.Direction *= -1;
                         }
                         state.NextDirectionDecision = now.AddMilliseconds(EnemyDirectionDecisionMilliseconds);
                     }
                 }
-
+                //moves the enemy based on its speed and direction, and checks for collisions with the edges of the screen
                 MoveEnemyWithinGrid(enemy, state, now);
 
+                //similar idea to movement but for shooting
                 EnemyCombatState combatState = enemyCombatStates[enemy];
                 if (now >= combatState.NextShotTime)
                 {
@@ -380,7 +400,7 @@ namespace DeepSpaceGalactic
                     combatState.NextShotTime = now.AddSeconds(enemy.FireRate);
                 }
             }
-
+            //handles collision / projectiles / astroids / and removal of destroyed objects
             ReverseCollidingEnemies(now);
             MoveProjectiles();
             SpawnAndMoveAsteroids(now);
@@ -391,6 +411,7 @@ namespace DeepSpaceGalactic
         #region Collision and After collision damage/removal
         private void ProcessCollisions()
         {
+            //hashets for each destroyed object that will need to be delt with
             HashSet<Projectile> destroyedProjectiles = new HashSet<Projectile>();
             HashSet<Asteroid> destroyedAsteroids = new HashSet<Asteroid>();
             HashSet<Asteroid> destroyedAsteroidsPlayer = new HashSet<Asteroid>();
@@ -398,20 +419,23 @@ namespace DeepSpaceGalactic
 
             foreach (Projectile projectile in projectiles)
             {
+                //loops through all projectiles then sorts it based on if its a player projectile or enemy projectile
                 if (projectile.IsPlayerProjectile)
                 {
                     foreach (Enemy enemy in enemies)
                     {
+                        //validates if enemy is already in hashet or if theres no collision
                         if (destroyedEnemies.Contains(enemy) || !GameLogic.IsCollision(projectile, enemy))
                         {
                             continue;
                         }
-
+                        //damage applied to enemy and projectile added to hashet 
                         enemy.Health -= player.Damage;
                         destroyedProjectiles.Add(projectile);
 
                         if (enemy.Health <= 0)
                         {
+                            //destroyed "killed" enemies and added enemy point value to player score
                             player.Score += enemy.PointValue;
                             destroyedEnemies.Add(enemy);
                         }
@@ -426,6 +450,7 @@ namespace DeepSpaceGalactic
                 }
                 else if (GameLogic.IsCollision(projectile, player))
                 {
+                    //if projectile is from an enemy and collides with player apply damage to player and add projectile to hashet
                     ApplyDamageToPlayer(projectile.Damage);
                     destroyedProjectiles.Add(projectile);
                     continue;
@@ -433,6 +458,7 @@ namespace DeepSpaceGalactic
 
                 foreach (Asteroid asteroid in asteroids)
                 {
+                    //same validation and decision logic as above
                     if (destroyedAsteroids.Contains(asteroid) || !GameLogic.IsCollision(projectile, asteroid))
                     {
                         continue;
@@ -449,13 +475,14 @@ namespace DeepSpaceGalactic
 
             foreach (Asteroid asteroid in asteroids)
             {
+                //same logic as above for player
                 if (!destroyedAsteroids.Contains(asteroid) && GameLogic.IsCollision(player, asteroid))
                 {
                     ApplyDamageToPlayer(asteroid.Damage);
                     destroyedAsteroids.Add(asteroid);
                 }
             }
-
+            //removes everything inside the hashsets 
             RemoveDestroyedProjectiles(destroyedProjectiles);
             RemoveDestroyedAsteroids(destroyedAsteroids);
             RemoveDestroyedEnemies(destroyedEnemies);
@@ -463,16 +490,19 @@ namespace DeepSpaceGalactic
 
         private void ApplyDamageToPlayer(int damage)
         {
+            //tracks health prior, used for validation
             int healthBeforeHit = player.Health;
             player.Health -= damage;
 
             if (healthBeforeHit > 0 && player.Health == 0)
             {
+                //when player has no lives game over
                 if (player.Lives - 1 == 0)
                     GameOver();
-                //here where end game code goes
+          
                 else
                 {
+                    //here is where the health reset variable comes into play from player creation
                     player.Lives -= 1;
                     player.Health = totalPlayerHealth;
                 }
@@ -480,6 +510,7 @@ namespace DeepSpaceGalactic
         }
         private void RemoveDestroyedAsteroids(IEnumerable<Asteroid> destroyedAsteroids)
         {
+            //removes astroids from the list and the main grid
             foreach (Asteroid asteroid in destroyedAsteroids)
             {
                 asteroids.Remove(asteroid);
@@ -489,6 +520,7 @@ namespace DeepSpaceGalactic
 
         private void RemoveDestroyedEnemies(IEnumerable<Enemy> destroyedEnemies)
         {
+            //same thing but removes each combat and movement state
             foreach (Enemy enemy in destroyedEnemies)
             {
                 enemies.Remove(enemy);
@@ -496,6 +528,7 @@ namespace DeepSpaceGalactic
                 enemyCombatStates.Remove(enemy);
                 MainGrid.Children.Remove(enemy.Img);
             }
+            //once list is empty advance to next level
             if (enemies.Count == 0)
             {
                 AdvanceLevel();
@@ -509,15 +542,18 @@ namespace DeepSpaceGalactic
         {
             if (now >= nextAsteroidSpawnTime)
             {
+                //astroids spawn at random set intervals and spawn a random number of astroids each time
                 int asteroidCount = GetAsteroidsPerSpawn();
                 for (int count = 0; count < asteroidCount; count++)
                 {
                     CreateAsteroid();
                 }
-
+                //after number of astroids created sets next spawn time
                 ScheduleNextAsteroidSpawn(now);
             }
 
+            //loop to remove astorids that go out of bounds
+            //iterates backwards to not mess up the index when removing from the list
             for (int index = asteroids.Count - 1; index >= 0; index--)
             {
                 Asteroid asteroid = asteroids[index];
@@ -536,12 +572,15 @@ namespace DeepSpaceGalactic
 
         private void CreateAsteroid()
         {
+            //randomizes size of astoriods based off game setting variables
+            //randomizes the spawn for either top left or right sides
             int size = random.Next(MinimumAsteroidSize, MaximumAsteroidSize + 1);
             int left;
             int top;
             int spawnEdge = random.Next(3);
             double velocityX;
-
+            //only sends the astroid downwards and randomizes the horizontal velocity based on spawn edge
+            //cuts main grid height to dictate lowest point of spawn which i kept decently near the top half
             if (spawnEdge == 0)
             {
                 left = random.Next(0, Math.Max(1, (int)MainGrid.ActualWidth - size + 1));
@@ -561,21 +600,23 @@ namespace DeepSpaceGalactic
                 velocityX = -random.Next(1, 4);
             }
 
+            //randomizes which astroid image to use
             string imageName = random.Next(2) == 0 ? "Astriods/Astriod1.png" : "Astriods/Astriod2.png";
             GamePiece piece = GameLogic.CreatePiece(imageName, size, left, top);
             Asteroid asteroid = new Asteroid(piece.Img)
             {
+                //creates astroid and randomizes the speed
                 VelocityX = velocityX,
                 VelocityY = random.Next(2, 6)
             };
-
+            //adds to list and screen
             asteroids.Add(asteroid);
             MainGrid.Children.Add(asteroid.Img);
         }
 
         private int GetAsteroidsPerSpawn()
         {
-            // 1 and 2 are common; 3 is less common; 4 is an occasional burst.
+            //1 and 2 are common / 3 is less common / 4 is occasional
             int weightedChoice = random.Next(10);
             int count = weightedChoice < 4 ? 1
                 : weightedChoice < 7 ? 2
@@ -587,12 +628,14 @@ namespace DeepSpaceGalactic
 
         private double GetAsteroidHorizontalVelocity()
         {
+            //randomizes horizontal speed so astroids come from different angles 
             int horizontalSpeed = random.Next(0, 6);
             return random.Next(2) == 0 ? -horizontalSpeed : horizontalSpeed;
         }
 
         private void ScheduleNextAsteroidSpawn(DateTimeOffset now)
         {
+            //randomizes the next spawn time based on the game setting variables
             double delay = MinimumAsteroidSpawnSeconds + random.NextDouble() * (MaximumAsteroidSpawnSeconds - MinimumAsteroidSpawnSeconds);
             nextAsteroidSpawnTime = now.AddSeconds(delay);
         }
@@ -628,6 +671,7 @@ namespace DeepSpaceGalactic
 
         private void CreateEnemyProjectile(Enemy enemy)
         {
+            //creates enemy projectile based on enemy properties so it shoots from them
             const int projectileSize = 15;
 
             int left =(int)(enemy.Position.Left + (enemy.Img.Width - projectileSize) / 2);
@@ -664,6 +708,7 @@ namespace DeepSpaceGalactic
 
         private void RemoveDestroyedProjectiles(IEnumerable<Projectile> destroyedProjectiles)
         {
+            //removes all projectiles needed to be destroyed
             foreach (Projectile projectile in destroyedProjectiles)
             {
                 projectiles.Remove(projectile);
@@ -677,6 +722,8 @@ namespace DeepSpaceGalactic
         #region Enemy / Player movement
         private void MoveEnemyWithinGrid(Enemy enemy, EnemyMovementState state, DateTimeOffset now)
         {
+            //keeps the enemy within playing grid, and reverses enemy on either side of screen collision or another enemy
+            //moves enemy based on its speed property
             double maximumLeft = MainGrid.ActualWidth - enemy.Img.Width;
             double nextLeft = enemy.Position.Left + (enemy.Speed * state.Direction);
 
@@ -698,6 +745,7 @@ namespace DeepSpaceGalactic
 
         private void ReverseCollidingEnemies(DateTimeOffset now)
         {
+            //reverses enemy and they are locked in to that direction for longer
             for (int first = 0; first < enemies.Count - 1; first++)
             {
                 for (int second = first + 1; second < enemies.Count; second++)
@@ -713,6 +761,7 @@ namespace DeepSpaceGalactic
 
         private void ReverseEnemy(Enemy enemy, DateTimeOffset now)
         {
+            //heres where the direction lock is applied
             EnemyMovementState state = enemyMovementStates[enemy];
             state.Direction *= -1;
             state.DirectionLockedUntil = now.AddMilliseconds(EnemyCollisionDirectionLockMilliseconds);
@@ -721,6 +770,7 @@ namespace DeepSpaceGalactic
 
         private void MovePlayer()
         {
+            //player movement on the helddirections
             if (MainGrid.ActualWidth <= 0 || MainGrid.ActualHeight <= 0)
             {
                 return;
@@ -732,6 +782,7 @@ namespace DeepSpaceGalactic
             double vertical = (heldDirections.Contains(Windows.System.VirtualKey.Down) ? 1 : 0)
                 - (heldDirections.Contains(Windows.System.VirtualKey.Up) ? 1 : 0);
 
+            //weird math to make it so going diangonal doesnt give a speed boost / seems to work fine
             if (horizontal != 0 && vertical != 0)
             {
                 const double diagonalMultiplier = 0.7071067811865476;
@@ -739,6 +790,7 @@ namespace DeepSpaceGalactic
                 vertical *= diagonalMultiplier;
             }
 
+            //moves player based on speed property
             double newLeft = player.Position.Left + horizontal * player.Speed;
             double newTop = player.Position.Top + vertical * player.Speed;
 
@@ -762,6 +814,7 @@ namespace DeepSpaceGalactic
         #region UI Button Clicks
         private void StartGameButton_Click(object sender, RoutedEventArgs e)
         {
+            //changes visibilities and start game
             MainMenuGrid.Visibility = Visibility.Collapsed;
             GameOverOverlayGrid.Visibility = Visibility.Collapsed;
             MainGrid.Visibility = Visibility.Visible;
@@ -771,6 +824,7 @@ namespace DeepSpaceGalactic
 
         private void PlayAgainButton_Click(object sender, RoutedEventArgs e)
         {
+            //changes visibilities and start game
             MainMenuGrid.Visibility = Visibility.Collapsed;
             GameOverOverlayGrid.Visibility = Visibility.Collapsed;
             MainGrid.Visibility = Visibility.Visible;
@@ -780,6 +834,7 @@ namespace DeepSpaceGalactic
 
         private void MainMenuButton_Click(object sender, RoutedEventArgs e)
         {
+            //changes visibilities and resets game state to menu
             ClearPlayingArea();
             gameState = GameState.Menu;
             GameOverOverlayGrid.Visibility = Visibility.Collapsed;

@@ -34,6 +34,7 @@ namespace DSG_Library
             Damage = 1;
             IsPlayerProjectile = true;
         }
+        //overloaded contructor to keep bool of isplayerprojectile , made it easier storing it in the class
         public Projectile(Image img, double velocityX, double velocityY, int damage, bool isPlayerProjectile) : base(img)
         {
             VelocityX = velocityX;
