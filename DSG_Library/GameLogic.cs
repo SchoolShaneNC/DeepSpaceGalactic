@@ -11,6 +11,7 @@ namespace DSG_Library
 {
     public static class GameLogic
     {
+        //another contructor for creating a game piece with a specific size
         public static GamePiece CreatePiece(string imgSrc, int size, int left, int top)
         {
             GamePiece piece = CreatePiece(imgSrc, left, top);

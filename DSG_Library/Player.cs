@@ -18,7 +18,7 @@ namespace DSG_Library
         private double speed;
         private int score;
         private int damage;
-
+        //propertychanged for invoking the objec binding to the xaml
         public event PropertyChangedEventHandler PropertyChanged;
 
         public int Lives
