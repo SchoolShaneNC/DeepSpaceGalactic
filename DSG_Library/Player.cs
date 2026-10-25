@@ -40,7 +40,7 @@ namespace DSG_Library
             get { return health; }
             set
             {
-                if (value < 0 || value > 10000)
+                if (value < 0 || value > 200)
                     health = 0;
                 else
                     health = value;
@@ -118,12 +118,12 @@ namespace DSG_Library
 
         public Player(Windows.UI.Xaml.Controls.Image img, int lives, int health, double firerate, double speed, int score, int damage) : base(img)
         {
-            Lives = 3;
-            Health = 100;
-            FireRate = 0.5; //seconds between shots
-            Speed = 9;
-            Score = 0;
-            Damage = 1;
+            Lives = lives;
+            Health = health;
+            FireRate = firerate; //seconds between shots
+            Speed = speed;
+            Score = score;
+            Damage = damage;
         }
     }
 }
