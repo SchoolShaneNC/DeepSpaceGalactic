@@ -123,6 +123,9 @@
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>
     <Compile Include="GameSession.cs" />
+    <Compile Include="CampaignCompletion.cs" />
+    <Compile Include="HighScoreEntry.cs" />
+    <Compile Include="HighScoreManager.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

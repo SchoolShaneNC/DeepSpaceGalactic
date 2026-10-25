@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using DSG_Library;
 using Windows.System;
 using Windows.UI.Xaml;
@@ -69,6 +70,7 @@ namespace DeepSpaceGalactic
         private double boardHeight;
         private DateTimeOffset nextPlayerShotTime;
         private DateTimeOffset nextAsteroidSpawnTime;
+        private Stopwatch campaignTimer;
 
         //use GameState enum to track the session lifecycle, starts in the menu state and changes to playing, won, or game over as the game session progresses
         private GameState state = GameState.Menu;
@@ -99,6 +101,7 @@ namespace DeepSpaceGalactic
         public event Action<Player> PlayerCreated;
         public event Action<int> LevelChanged;
         public event Action<string> Ended;
+        public event Action<CampaignCompletion> CampaignCompleted;
 
         public void SetBoardSize(double width, double height)
         {
@@ -114,6 +117,8 @@ namespace DeepSpaceGalactic
             state = GameState.Playing;
             currentLevel = FirstLevel;
             nextPlayerShotTime = DateTimeOffset.MinValue;
+            //starts the timer for leaderboard if applicable 
+            campaignTimer = Stopwatch.StartNew();
 
             //create the player first so later gameplay methods can use its stats and position
             //starts the level at the beginning, and configures the enemies/projectiles aswell as clears any enemies/projectiles
@@ -790,7 +795,23 @@ namespace DeepSpaceGalactic
             //save the final state, stop all timers, and notify MainPage to show the appropriate overlay
             state = endState;
             StopTimers();
+            CampaignCompletion completion = null;
+
+            if (campaignTimer != null)
+            {
+                campaignTimer.Stop();
+
+                if (endState == GameState.Won)
+                {
+                    int timeTaken = (int)Math.Ceiling(campaignTimer.Elapsed.TotalSeconds);
+                    completion = new CampaignCompletion(timeTaken, player.Score, currentLevel, DateTimeOffset.Now);
+                }
+            }
+
             Ended?.Invoke(title);
+
+            if (completion != null)
+                CampaignCompleted?.Invoke(completion);
         }
 
         private void ClearSession()
@@ -805,6 +826,7 @@ namespace DeepSpaceGalactic
             enemyCombatStates.Clear();
             player = null;
             nextPlayerShotTime = DateTimeOffset.MinValue;
+            campaignTimer = null;
 
             //tell MainPage to clear the displayed playing area as well
             BoardCleared?.Invoke();

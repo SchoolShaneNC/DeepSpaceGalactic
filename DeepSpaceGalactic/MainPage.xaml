@@ -9,6 +9,71 @@
     mc:Ignorable="d"
     Background="Black">
 
+    <Page.Resources>
+        <Style x:Key="MenuActionButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="#FF1C5D7D" />
+            <Setter Property="BorderBrush" Value="#FFB8EDFF" />
+            <Setter Property="BorderThickness" Value="2" />
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="ButtonBorder"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}">
+                            <VisualStateManager.VisualStateGroups>
+                                <VisualStateGroup x:Name="CommonStates">
+                                    <VisualState x:Name="Normal" />
+                                    <VisualState x:Name="PointerOver">
+                                        <Storyboard>
+                                            <ObjectAnimationUsingKeyFrames Storyboard.TargetName="ButtonBorder" Storyboard.TargetProperty="Background">
+                                                <DiscreteObjectKeyFrame KeyTime="0" Value="#FF297EA8" />
+                                            </ObjectAnimationUsingKeyFrames>
+                                            <ObjectAnimationUsingKeyFrames Storyboard.TargetName="ButtonBorder" Storyboard.TargetProperty="BorderBrush">
+                                                <DiscreteObjectKeyFrame KeyTime="0" Value="#FFFFFFFF" />
+                                            </ObjectAnimationUsingKeyFrames>
+                                        </Storyboard>
+                                    </VisualState>
+                                    <VisualState x:Name="Pressed">
+                                        <Storyboard>
+                                            <ObjectAnimationUsingKeyFrames Storyboard.TargetName="ButtonBorder" Storyboard.TargetProperty="Background">
+                                                <DiscreteObjectKeyFrame KeyTime="0" Value="#FF123F58" />
+                                            </ObjectAnimationUsingKeyFrames>
+                                        </Storyboard>
+                                    </VisualState>
+                                    <VisualState x:Name="Disabled">
+                                        <Storyboard>
+                                            <DoubleAnimation Storyboard.TargetName="ButtonBorder" Storyboard.TargetProperty="Opacity" To="0.45" Duration="0" />
+                                        </Storyboard>
+                                    </VisualState>
+                                </VisualStateGroup>
+                                <VisualStateGroup x:Name="FocusStates">
+                                    <VisualState x:Name="Focused">
+                                        <Storyboard>
+                                            <ObjectAnimationUsingKeyFrames Storyboard.TargetName="ButtonBorder" Storyboard.TargetProperty="BorderBrush">
+                                                <DiscreteObjectKeyFrame KeyTime="0" Value="#FFFFD166" />
+                                            </ObjectAnimationUsingKeyFrames>
+                                        </Storyboard>
+                                    </VisualState>
+                                    <VisualState x:Name="Unfocused" />
+                                    <VisualState x:Name="PointerFocused" />
+                                </VisualStateGroup>
+                            </VisualStateManager.VisualStateGroups>
+                            <ContentPresenter Content="{TemplateBinding Content}"
+                                              ContentTemplate="{TemplateBinding ContentTemplate}"
+                                              Foreground="{TemplateBinding Foreground}"
+                                              HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                              VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}" />
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Page.Resources>
 
     <Grid x:Name="RootGrid">
         <!-- Playing state: the existing game area remains available to MainPage.cs. -->
@@ -60,23 +125,43 @@
                 <ImageBrush ImageSource="ms-appx:///Assets/Backgrounds/SpaceBackground.jpg" Stretch="UniformToFill" />
             </Grid.Background>
 
-            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="36">
-                <Image Source="Assets/Backgrounds/DeepRockGalactic.png" MaxWidth="700" Stretch="Uniform" HorizontalAlignment="Center"/>
-                <Button x:Name="StartGameButton" Content="START GAME" Width="320" Height="86" FontSize="30" HorizontalAlignment="Center" Background="#33FFFFFF" Click="StartGameButton_Click" />
-            </StackPanel>
+            <Border Width="760" MaxHeight="720" HorizontalAlignment="Center" VerticalAlignment="Center" Background="#ED101B2B" BorderBrush="#FF8FD3EB" BorderThickness="2" Padding="28">
+                <StackPanel Spacing="16">
+                    <Image Source="Assets/Backgrounds/DeepRockGalactic.png" MaxWidth="650" MaxHeight="150" Stretch="Uniform" HorizontalAlignment="Center"/>
+                    <Button x:Name="StartGameButton" Style="{StaticResource MenuActionButtonStyle}" Content="START GAME" Width="320" Height="72" FontSize="28" HorizontalAlignment="Center" Click="StartGameButton_Click" />
+                    <TextBlock Text="CAMPAIGN TOP 10" Foreground="#FFF4FBFF" FontSize="26" FontWeight="SemiBold" HorizontalAlignment="Center" />
+                    <TextBlock Text="RANK   PILOT   TIME   SCORE   LEVEL   DATE" Foreground="#FFB8EDFF" FontSize="14" FontWeight="SemiBold" TextAlignment="Center" HorizontalAlignment="Center" />
+                    <Border Background="#FF17283B" BorderBrush="#FF4A708A" BorderThickness="1" Padding="12" MaxHeight="220">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                            <TextBlock x:Name="CampaignLeaderboardTextBlock" Foreground="#FFF4FBFF" FontSize="16" TextAlignment="Center" TextWrapping="Wrap" HorizontalAlignment="Center" />
+                        </ScrollViewer>
+                    </Border>
+                    <TextBlock x:Name="LeaderboardStatusTextBlock" Foreground="#FFFFD166" FontSize="14" TextAlignment="Center" TextWrapping="Wrap" HorizontalAlignment="Center" />
+                </StackPanel>
+            </Border>
         </Grid>
 
         <!-- Game objects remain in PlayingGrid underneath this overlay. -->
         <Grid x:Name="GameOverOverlayGrid" Visibility="Collapsed" Background="#88000000">
-            <Border Width="460" Height="340" HorizontalAlignment="Center" VerticalAlignment="Center" BorderBrush="White" BorderThickness="2" Padding="36">
-                <Border.Background>
-                    <ImageBrush ImageSource="ms-appx:///Assets/Backgrounds/SpaceBackground.jpg" Stretch="UniformToFill" />
-                </Border.Background>
-
-                <StackPanel VerticalAlignment="Center" Spacing="22">
-                    <TextBlock x:Name="EndGameTitleTextBlock" Text="GAME OVER" Foreground="White" FontSize="50" FontWeight="SemiBold" HorizontalAlignment="Center" />
-                    <Button x:Name="PlayAgainButton" Content="PLAY AGAIN" Height="60" FontSize="24" Click="PlayAgainButton_Click" />
-                    <Button x:Name="MainMenuButton" Content="MAIN MENU" Height="60" FontSize="24" Click="MainMenuButton_Click" />
+            <Border Width="680" MaxHeight="720" HorizontalAlignment="Center" VerticalAlignment="Center" Background="#F0101B2B" BorderBrush="#FF8FD3EB" BorderThickness="2" Padding="36">
+                <StackPanel VerticalAlignment="Center" Spacing="16">
+                    <TextBlock x:Name="EndGameTitleTextBlock" Text="GAME OVER" Foreground="#FFF4FBFF" FontSize="50" FontWeight="SemiBold" HorizontalAlignment="Center" />
+                    <TextBlock x:Name="EndGameFeedbackTextBlock" Foreground="#FFFFD166" FontSize="16" TextAlignment="Center" TextWrapping="Wrap" />
+                    <TextBlock Text="CAMPAIGN TOP 10" Foreground="#FFF4FBFF" FontSize="22" FontWeight="SemiBold" HorizontalAlignment="Center" />
+                    <TextBlock Text="RANK   PILOT   TIME   SCORE   LEVEL   DATE" Foreground="#FFB8EDFF" FontSize="13" FontWeight="SemiBold" TextAlignment="Center" HorizontalAlignment="Center" />
+                    <Border Background="#FF17283B" BorderBrush="#FF4A708A" BorderThickness="1" Padding="12" MaxHeight="210">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                            <TextBlock x:Name="EndGameLeaderboardTextBlock" Foreground="#FFF4FBFF" FontSize="16" TextAlignment="Center" TextWrapping="Wrap" />
+                        </ScrollViewer>
+                    </Border>
+                    <Grid ColumnSpacing="16">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Button x:Name="PlayAgainButton" Grid.Column="0" Style="{StaticResource MenuActionButtonStyle}" Content="PLAY AGAIN" Height="60" FontSize="22" Click="PlayAgainButton_Click" />
+                        <Button x:Name="MainMenuButton" Grid.Column="1" Style="{StaticResource MenuActionButtonStyle}" Content="MAIN MENU" Height="60" FontSize="22" Click="MainMenuButton_Click" />
+                    </Grid>
                 </StackPanel>
             </Border>
         </Grid>
