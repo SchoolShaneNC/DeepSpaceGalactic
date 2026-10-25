@@ -54,7 +54,7 @@ namespace DSG_Library
                 if (value > 0)
                     damage = value;
                 else
-                    damage = 100;
+                    damage = 50;
             }
         }
 
@@ -74,7 +74,7 @@ namespace DSG_Library
         {
             VelocityX = 0;
             VelocityY = 0;
-            Damage = 100;
+            Damage = 50;
             Health = 1;
             PointValue = 10;
         }
