@@ -6,6 +6,13 @@ using Windows.Storage;
 
 namespace DeepSpaceGalactic
 {
+    /// <summary>
+    /// this class is responsible for all fileIO actions like loading/writing and methods for crwating top 10 
+    /// it determines top 10 by getting fileIO, if theres under 10 entries it auto goes in, if not it compares time to the time 
+    /// of the 10th entry, if it beats it then it gets added, it doesnt find the position simply rather adds it then runs a sort
+    /// the sort takes a public predicate to compare entries , if time matches it goes to score/ then date (earlier date wins)
+    /// after it sorts the top 11 it removes the last entry to bring the count down to 10 total
+    /// </summary>
     public class HighScoreManager
     {
         //stores the campaign file name and leaderboard limit

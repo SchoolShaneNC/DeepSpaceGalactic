@@ -837,6 +837,7 @@ namespace DeepSpaceGalactic
                 return;
 
             //save the final state, stop all timers, and notify MainPage to show the appropriate overlay
+            //makes the campaigncompletion null for saftey and only gets instanctiated when game is won
             state = endState;
             StopTimers();
             CampaignCompletion completion = null;
