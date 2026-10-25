@@ -20,6 +20,12 @@ namespace DeepSpaceGalactic
         private const double MaximumAsteroidSpawnSeconds = 2.0;
         private const int MinimumAsteroidsPerSpawn = 1;
         private const int MaximumAsteroidsPerSpawn = 4;
+        private const int AsteroidBeltLevel = 3;
+        private const int AsteroidBeltDurationSeconds = 35;
+        private const double MinimumAsteroidBeltSpawnSeconds = 0.3;
+        private const double MaximumAsteroidBeltSpawnSeconds = 0.6;
+        private const int MinimumAsteroidsPerBeltSpawn = 2;
+        private const int MaximumAsteroidsPerBeltSpawn = 6;
         private const int MinimumAsteroidSize = 40;
         private const int MaximumAsteroidSize = 80;
         private const int FirstLevel = 1;
@@ -70,7 +76,10 @@ namespace DeepSpaceGalactic
         private double boardHeight;
         private DateTimeOffset nextPlayerShotTime;
         private DateTimeOffset nextAsteroidSpawnTime;
+        private DateTimeOffset asteroidBeltEndsAt;
         private Stopwatch campaignTimer;
+        private bool asteroidBeltActive;
+        private bool asteroidBeltStarted;
 
         //use GameState enum to track the session lifecycle, starts in the menu state and changes to playing, won, or game over as the game session progresses
         private GameState state = GameState.Menu;
@@ -307,6 +316,8 @@ namespace DeepSpaceGalactic
 
             //get the current time once per tick so all updates use the same reference point for timing
             DateTimeOffset now = DateTimeOffset.UtcNow;
+
+            UpdateAsteroidBelt(now);
 
             //update enemy movement and firing, then move projectiles and asteroids before checking collisions
             UpdateEnemies(now);
@@ -552,6 +563,9 @@ namespace DeepSpaceGalactic
 
         private int GetAsteroidsPerSpawn()
         {
+            if (asteroidBeltActive)
+                return random.Next(MinimumAsteroidsPerBeltSpawn, MaximumAsteroidsPerBeltSpawn + 1);
+
             //use weighted random choices: one and two asteroids are common, three are less common, and four are occasional
             int choice = random.Next(10);
             int count = choice < 4 ? 1 : choice < 7 ? 2 : choice < 9 ? 3 : 4;
@@ -570,7 +584,9 @@ namespace DeepSpaceGalactic
         private void ScheduleNextAsteroidSpawn(DateTimeOffset now)
         {
             //pick a delay between the configured minimum and maximum spawn intervals
-            double delay = MinimumAsteroidSpawnSeconds + random.NextDouble() * (MaximumAsteroidSpawnSeconds - MinimumAsteroidSpawnSeconds);
+            double minimumSpawnSeconds = asteroidBeltActive ? MinimumAsteroidBeltSpawnSeconds : MinimumAsteroidSpawnSeconds;
+            double maximumSpawnSeconds = asteroidBeltActive ? MaximumAsteroidBeltSpawnSeconds : MaximumAsteroidSpawnSeconds;
+            double delay = minimumSpawnSeconds + random.NextDouble() * (maximumSpawnSeconds - minimumSpawnSeconds);
             nextAsteroidSpawnTime = now.AddSeconds(delay);
         }
 
@@ -716,7 +732,7 @@ namespace DeepSpaceGalactic
             }
 
             //advance only while the game is active and all enemies for this level have been defeated
-            if (state == GameState.Playing && enemies.Count == 0)
+            if (state == GameState.Playing && !asteroidBeltActive && enemies.Count == 0)
                 AdvanceLevel();
         }
 
@@ -726,6 +742,12 @@ namespace DeepSpaceGalactic
 
         private void AdvanceLevel()
         {
+            if (currentLevel == AsteroidBeltLevel && !asteroidBeltStarted)
+            {
+                StartAsteroidBelt();
+                return;
+            }
+
             //the player wins after completing the final configured level
             if (currentLevel >= MaximumLevel)
             {
@@ -736,6 +758,28 @@ namespace DeepSpaceGalactic
             //otherwise increase the level and create the next level's enemies
             currentLevel++;
             StartLevel();
+        }
+
+        private void StartAsteroidBelt()
+        {
+            //after level 3 player enters asteriod belt where an increase of asteriods and no enemies happens for 35 seconds
+            asteroidBeltStarted = true;
+            asteroidBeltActive = true;
+            DateTimeOffset now = DateTimeOffset.UtcNow;
+            asteroidBeltEndsAt = now.AddSeconds(AsteroidBeltDurationSeconds);
+            nextAsteroidSpawnTime = now;
+        }
+
+        private void UpdateAsteroidBelt(DateTimeOffset now)
+        {
+            //this is where the asteriod belt ends after the 35 seconds and advances level as usual
+            //levels and scaling stays the same as v1 just with basically an interuption between levels 3-4
+            if (!asteroidBeltActive || now < asteroidBeltEndsAt)
+                return;
+
+            asteroidBeltActive = false;
+            ScheduleNextAsteroidSpawn(now);
+            AdvanceLevel();
         }
 
         private void MovePlayer()
@@ -826,7 +870,11 @@ namespace DeepSpaceGalactic
             enemyCombatStates.Clear();
             player = null;
             nextPlayerShotTime = DateTimeOffset.MinValue;
+            nextAsteroidSpawnTime = DateTimeOffset.MinValue;
+            asteroidBeltEndsAt = DateTimeOffset.MinValue;
             campaignTimer = null;
+            asteroidBeltActive = false;
+            asteroidBeltStarted = false;
 
             //tell MainPage to clear the displayed playing area as well
             BoardCleared?.Invoke();
